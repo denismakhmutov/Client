@@ -6504,9 +6504,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1391808532}
-        m_MethodName: SetActive
-        m_Mode: 6
+      - m_Target: {fileID: 1852673801}
+        m_MethodName: ProgramatorPanelActive
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -25540,7 +25540,7 @@ RectTransform:
   m_Father: {fileID: 818530659}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.8}
+  m_AnchorMin: {x: 0, y: 0.3}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
@@ -37346,7 +37346,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.13450328, y: 0.07550966}
   m_AnchorMax: {x: 0.42849675, y: 0.26849034}
-  m_AnchoredPosition: {x: 272.01, y: 125.799995}
+  m_AnchoredPosition: {x: 272.01, y: 125.8}
   m_SizeDelta: {x: -48.5, y: -29.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1127649174
@@ -61781,18 +61781,72 @@ MonoBehaviour:
   startStopButtonText: {fileID: 1994527787}
   debugButton: {fileID: 1214413156}
   SliderBackground: {fileID: 907197465}
+  scrollbar: {fileID: 2117070668}
   LinePrefab: {fileID: 1845404525083408, guid: 5e385a592492af34e9535e04efbdf844, type: 2}
-  WithoutParametersPrefab: {fileID: 1308467062155426, guid: ebbc2432721130e459d1a19db49511d7,
-    type: 2}
-  FuncPrefab: {fileID: 1607999058412404, guid: fa51967fbde97a24bb9ad15edda698d6, type: 2}
-  IfPrefab: {fileID: 1313744207775078, guid: 38bfa04f0b5964040a8ffc04bdc432c6, type: 2}
-  JmpPrefab: {fileID: 1589699219521710, guid: b96e8a1db89ac4540bf6a1aa59be04df, type: 2}
-  LabelPrefab: {fileID: 1748763584088694, guid: 36d33b86b5df74f4aaa3001522472def,
-    type: 2}
   alFuncBlocksPrefab: {fileID: 1560734079480564, guid: fb1cbfcc45adc2f44934b4cb0906f6f2,
     type: 2}
+  verifSprites:
+  - {fileID: 21300000, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300002, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300004, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300006, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300008, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300010, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300012, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300014, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300016, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  ifSprites:
+  - {fileID: 21300034, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300036, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  orAndSprites:
+  - {fileID: 21300038, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300040, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  jmpSprite: {fileID: 21300042, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  funkSprites:
+  - {fileID: 21300044, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300046, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  returnSprites:
+  - {fileID: 21300048, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300050, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  noneNextSprites:
+  - {fileID: 21300054, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300056, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  moveAndRotateSprites:
+  - {fileID: 21300072, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300074, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300076, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300078, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300104, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300106, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300108, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300110, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  CristallsSprites:
+  - {fileID: 21300084, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300116, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300150, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300172, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300086, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300118, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  startEndSprites:
+  - {fileID: 21300068, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300070, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  blockOrNoSprites:
+  - {fileID: 21300080, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300112, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  actionsSprites:
+  - {fileID: 21300100, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300140, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300142, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300144, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300160, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300162, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300164, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  firstLine: 0
   progrActive: 0
-  tactsPerFrame: 2
+  tactsPerFrame: 1
+  TactsForCD: 0
   currStep: 0
   stackVolume: 1024
   stackLvl: 0
@@ -68870,11 +68924,22 @@ MonoBehaviour:
   m_HandleRect: {fileID: 788423331}
   m_Direction: 3
   m_Value: 0
-  m_Size: 0.2
+  m_Size: 0.7
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1852673801}
+        m_MethodName: ProgramScroll
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Scrollbar+ScrollEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &2117070669

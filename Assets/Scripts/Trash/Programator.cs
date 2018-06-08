@@ -14,27 +14,39 @@ public class Programator : MonoBehaviour {
 	public Text startStopButtonText;//текст кнопки включения и выключения программы
 	public Button debugButton;//кнопка дебага(для отключения или включения в зависимости от чего-то)
 	public Slider SliderBackground;//прозрачность задника программатора
+	public Scrollbar scrollbar;//скролл для проги
 
 	//Префабы, нужные для построения сетки программатора
 	public GameObject LinePrefab;//префаб строки программатора
-	public GameObject WithoutParametersPrefab;//програмный элемент без вписывемых в него параметров
-	public GameObject FuncPrefab;//элемент "сылка на функцию"
-	public GameObject IfPrefab;//оператор ветвления
-	public GameObject JmpPrefab;//перенос по адресу
-	public GameObject LabelPrefab;//именованная ячейка
 	public GameObject alFuncBlocksPrefab;//все программные блоки и скрипт для обращения к ним
 
 	AllProgramBlocksController[,] programBlocks;//Массив программных блоков
 	GameObject[,] programCells;//Массив программных ячеек
 	Text[] lineNum;//Массив номеров ячеек
+
+	public Sprite[] verifSprites = new Sprite[9];//страйты проверок в разные стороны
+	public Sprite[] ifSprites = new Sprite[2];//
+	public Sprite[] orAndSprites = new Sprite[2];//
+	public Sprite jmpSprite;
+	public Sprite[] funkSprites = new Sprite[2];//
+	public Sprite[] returnSprites = new Sprite[2];//
+	public Sprite[] noneNextSprites = new Sprite[2];//
+	public Sprite[] moveAndRotateSprites = new Sprite[8];//
+	public Sprite[] CristallsSprites = new Sprite[8];//
+	public Sprite[] startEndSprites = new Sprite[2];//
+	public Sprite[] blockOrNoSprites = new Sprite[2];//
+	public Sprite[] actionsSprites = new Sprite[7];//
+
+	public int firstLine = 0;//указывает, с какой строки начинать отображение на экране (зависит от скрола)
 	#endregion
 	[Space]
 	public bool progrActive = false;
 
 	public const int pageX = 16;
-	public const int pageY = 16;
+	public const int pageY = 64;
 
 	public int tactsPerFrame = 1;//тактов на один кадр
+	public int TactsForCD = 0;//такты бездействия. разные функции дают разное количество единиц бездействия
 
 	public Vec2i startCoor = new Vec2i(0, 0);//координаты стартовой метки программы
 	public int currStep = 0;//текущий шаг в прогремме
@@ -45,9 +57,10 @@ public class Programator : MonoBehaviour {
 
 	ChankLoad chunkLoad;//ссылка на чанклоадер для работы с картой
 
-	//массив программы (разбиваться на страницы не будет. 
-	//Программатор будет иметь скролбар и вся прога будет размещаться на одном большом поле)
-	string[,] program;
+	//массив команд программы
+	string[,] ProgramComands;
+	//Ьфссив адресов и данных (в основном будет использоваться для адресов)
+	Vec2i[,] ProgramAdressesAndData;
 	/// <summary>
 	///если был определен опратор "условия" то режим проверки включается
 	///и все операторы сдвига принимаются для перемещения точки слежки
@@ -71,6 +84,7 @@ public class Programator : MonoBehaviour {
 	void Start() {
 		stack = new Vec2i[stackVolume];
 		chunkLoad = GameObject.Find("ChunkLoader").GetComponent<ChankLoad>();
+		scrollbar.size = 12 / (float)pageY;
 
 		programBlocks = new AllProgramBlocksController[16, 12];//Массив всех программных блоков на поле программатора(для упрощенного доступа)
 		programCells = new GameObject[16,12];//Массив всех программных ячеек на поле программатора(для упрощенного доступа)
@@ -87,40 +101,61 @@ public class Programator : MonoBehaviour {
 			for (int ii = 0; ii < 16; ii++)
 			{
 				programCells[ii, i] = cells[ii];//добавление в массив ячеек ссылок на ячейки строки
+
 				programBlocks[ii,i] = Instantiate(alFuncBlocksPrefab, cells[ii].transform, false).GetComponent<AllProgramBlocksController>();//составление таблицы программных блоков
+				//чтобы каждый из программных блоков кричал где его меняют
+				programBlocks[ii, i].x = ii;
+				programBlocks[ii, i].y = i;
+
 				cells[ii].GetComponent<EnterSensor>().x = ii;
 				cells[ii].GetComponent<EnterSensor>().y = i;
 			}
-			EnterSensor.programator = this;
-
-			//Мой гениальный способ удалять баг с отображенрием меню при первом открытии
-			//БЕЗ ЭТОЙ ФИЧИ ВСЕ СЛЕТАЕТ
-			panelProgramator.SetActive(true);
-			panelProgramator.SetActive(false);
 		}
+		//раздача ссылки на программатор скрипт чтобы скрипты возвращали события
+		EnterSensor.programator = this;
+		AllProgramBlocksController.programmatorref = this;
 
-		program = new string[pageX, pageY] {
-			{ "S","jmp0001","","","","","","","","","","","","","","end",},//0
-			{ "ver0001","blck","ifT0002","U","jmp0001","","","","","","","","","","","",},
-			{ "ver0100","blck","ifT0009","","jmp0005","","","","","","","","","","","",},
+		string[,] program0 = new string[16, 16] {
+			{ "S","","","","","","","","","","","","","","","",},//0
+			{ "","","","","","","","","","","","","","","","",},
+			{ "","","","","","","","","","","","","","","","",},
 			{ "","","","","","","","","","","","","","","","",},
 
-			{ "","","","","","","","","","","","","","","","",},//4
-			{ "ver0100","blck","ifT0006","R","jmp0005","","","","","","","","","","","",},
-			{ "ver00-1","blck","ifT0001","","jmp0013","","","","","","","","","","","",},
+			{ "","S","","","","","","","","","","","","","","",},//4
+			{ "","","","","","","","","","","","","","","","",},
+			{ "","","","","","","","","","","","","","","","",},
 			{ "","","","","","","","","","","","","","","","",},
 
-			{ "","","","","","","","","","","","","","","","",},//8
-			{ "ver-100","blck","ifT0010","L","jmp0009","","","","","","","","","","","",},
-			{ "ver0001","blck","ifT0013","","jmp0001","","","","","","","","","","","",},
+			{ "","","S","","","","","","","","","","","","","",},//8
+			{ "","","","","","","","","","","","","","","","",},
+			{ "","","","","","","","","","","","","","","","",},
 			{ "","","","","","","","","","","","","","","","",},
 
-			{ "","","","","","","","","","","","","","","","",},//12
-			{ "ver00-1","blck","ifT0014","D","jmp0013","","","","","","","","","","","",},
-			{ "ver-100","blck","ifT0005","","jmp0009","","","","","","","","","","","",},
+			{ "","","","S","","","","","","","","","","","","",},//12
 			{ "","","","","","","","","","","","","","","","",},
+			{ "","","","","","","","","","","","","","","","",},
+			{ "","","","","","","","","","","","","","","","end",},
 		};
 
+		ProgramComands = new string[pageX, pageY];
+		ProgramAdressesAndData = new Vec2i[pageX, pageY];
+		for (int y = 0; y < pageY; y++)
+			for (int x = 0; x < pageX; x++) {
+				ProgramAdressesAndData[x, y] = new Vec2i(0,0);
+				ProgramComands[x, y] = "";
+			}
+
+		for (int y = 0; y < 16; y++)
+			for (int x = 0; x < 16; x++)
+			{
+				ProgramComands[x, y] = program0[y, x];
+			}
+		
+
+		//Мой гениальный способ удалять баг с отображенрием меню при первом открытии
+		//БЕЗ ЭТОЙ ФИЧИ ВСЕ СЛЕТАЕТ
+		panelProgramator.SetActive(true);
+		panelProgramator.SetActive(false);
 	}
 
 	// Update is called once per frame
@@ -128,7 +163,13 @@ public class Programator : MonoBehaviour {
 		for (int n = 0; n < tactsPerFrame; n++)
 			if (progrActive)
 			{
-				ProgramTactUpdate();//выполнение следубщего шага программы
+				if (TactsForCD == 0)
+				{
+					ProgramTactUpdate();//выполнение следубщего шага программы
+				}
+				else {
+					--TactsForCD;
+				}
 			}
 			else {
 				//сброс всех значений для корректного старта программы
@@ -137,7 +178,9 @@ public class Programator : MonoBehaviour {
 				verificationMode = false;
 				//logOp = LogOp.NULL;
 			}
-		ProgramExecutionInfoUpdate();
+		if(panelProgramator.activeSelf){
+			ProgramExecutionInfoUpdate();//Инфа о процессе работы программатора
+		}
 	}
 
 	void ProgramTactUpdate() {
@@ -162,7 +205,7 @@ public class Programator : MonoBehaviour {
 
 		Debug.Log(stack[stackLvl].x + " " + stack[stackLvl].y);
 
-		switch (program[stack[stackLvl].y, stack[stackLvl].x])//ПОМЕНЯТЬ В БУДУЩЕМ ИКС И ИГРЕК МЕСТАМИ. СЕЙЧАС ТАК ДЛЯ ДЕБАГА
+		switch (ProgramComands[stack[stackLvl].x, stack[stackLvl].y])
 		{
 			#region примитивные метки
 			case ""://
@@ -214,15 +257,19 @@ public class Programator : MonoBehaviour {
 			#endregion
 			#region Поворот
 			case "r":
+				RotatRight();
 				verificationMode = false;
 				; break;
 			case "l":
+				RotatLeft();
 				verificationMode = false;
 				; break;
 			case "u":
+				RotatUp();
 				verificationMode = false;
 				; break;
 			case "d":
+				RotatDown();
 				verificationMode = false;
 				; break;
 			#endregion
@@ -236,7 +283,7 @@ public class Programator : MonoBehaviour {
 			#endregion
 			#region команды с параметром
 			default:
-				string com = program[stack[stackLvl].y, stack[stackLvl].x];//ПОМЕНЯТЬ В БУДУЩЕМ ИКС И ИГРЕК МЕСТАМИ. СЕЙЧАС ТАК ДЛЯ ДЕБАГА
+				string com = ProgramComands[stack[stackLvl].x, stack[stackLvl].y];//ПОМЕНЯТЬ В БУДУЩЕМ ИКС И ИГРЕК МЕСТАМИ. СЕЙЧАС ТАК ДЛЯ ДЕБАГА
 
 				if (Ident("jmp", com))
 				{//перемещение на указанный адрес (без переноса значения)
@@ -286,31 +333,31 @@ public class Programator : MonoBehaviour {
 					bool verIsPassed = false;//указатель на то, что какая-то из проверок была выполнена
 					switch (com)
 					{
-						case "blck":
+						case "blc":
 							if (chunkLoad.ChunkMapVal(verCoors) > 5)
 							{//все объекты после ИД5 являются блоками
 								result = true;
 								verIsPassed = true;
-								Debug.Log("blck");
+								Debug.Log("blc");
 							}
 							else
 							{
 								verIsPassed = true;
 							}
 							; break;
-						case "noblck":
+						case "/blc":
 							if (chunkLoad.ChunkMapVal(verCoors) < 6)
 							{//все объекты до ИД6 не являются блоками
 								result = true;
 								verIsPassed = true;
-								Debug.Log("noblck");
+								Debug.Log("/blc");
 							}
 							else
 							{
 								verIsPassed = true;
 							}
 							; break;
-						case "grnBl":
+						case "gb":
 							if (chunkLoad.ChunkMapVal(verCoors) == 36)
 							{//Зелёный блок
 								result = true;
@@ -322,7 +369,7 @@ public class Programator : MonoBehaviour {
 								verIsPassed = true;
 							}
 							; break;
-						case "ornBl":
+						case "ob":
 							if (chunkLoad.ChunkMapVal(verCoors) == 37)
 							{//оранжевый блок
 								result = true;
@@ -334,7 +381,7 @@ public class Programator : MonoBehaviour {
 								verIsPassed = true;
 							}
 							; break;
-						case "redBl":
+						case "rb":
 							if (chunkLoad.ChunkMapVal(verCoors) == 38)
 							{//красный блок
 								result = true;
@@ -552,10 +599,209 @@ public class Programator : MonoBehaviour {
 		}
 	}
 
-
+	//вызывается клеткой, над которой сейчас курсор
 	public void CellIsSelect(int x,int y) {
-		Debug.Log(x +" "+ y);
-		programBlocks[x, y].SetProgrElem(ProgrElem.Func);
+		Debug.Log("Select  " + x +" "+ y);
+	}
+
+	public void AdresIsChanged(int x, int y)
+	{
+		Debug.Log("Changed  " + x + " " + y);
+	}
+
+	//включение панели программатора
+	public void ProgramatorPanelActive() {
+		panelProgramator.SetActive(true);
+		ProgrPanelUpdate();
+	}
+
+	//Обновление всей панели программатора
+	void ProgrPanelUpdate() {
+
+		for (int y = 0; y < 12; y++)
+			for (int x = 0; x < 16; x++)
+			{
+				ProgElementUpdate(x,y);
+			}
+	}
+
+	//Обновление одного блока программатора
+	void ProgElementUpdate(int x, int y) {
+		switch (ProgramComands[x, y + firstLine])
+		{
+			case "":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, noneNextSprites[0]);
+				; break;
+			case "U":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, moveAndRotateSprites[0]);
+				; break;
+			case "D":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, moveAndRotateSprites[2]);
+				; break;
+			case "L":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, moveAndRotateSprites[1]);
+				; break;
+			case "R":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, moveAndRotateSprites[3]);
+				; break;
+			case "u":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, moveAndRotateSprites[4]);
+				; break;
+			case "d":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, moveAndRotateSprites[6]);
+				; break;
+			case "l":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, moveAndRotateSprites[5]);
+				; break;
+			case "r":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, moveAndRotateSprites[7]);
+				; break;
+			case "S":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, startEndSprites[0]);
+				; break;
+
+			case "gc":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, CristallsSprites[0]);
+				; break;
+			case "bc":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, CristallsSprites[1]);
+				; break;
+			case "rc":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, CristallsSprites[2]);
+				; break;
+			case "wc":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, CristallsSprites[3]);
+				; break;
+			case "vc":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, CristallsSprites[4]);
+				; break;
+			case "cc":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, CristallsSprites[5]);
+				; break;
+
+			case "or":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, orAndSprites[0]);
+				; break;
+			case "and":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, orAndSprites[1]);
+				; break;
+
+			case "blc":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, blockOrNoSprites[0]);
+				; break;
+			case "/blc":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, blockOrNoSprites[1]);
+				; break;
+
+			case "dg":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, actionsSprites[0]);
+				; break;
+			case "mb":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, actionsSprites[1]);
+				; break;
+			case "ge":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, actionsSprites[2]);
+				; break;
+			case "al":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, actionsSprites[3]);
+				; break;
+			case "ro":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, actionsSprites[4]);
+				; break;
+			case "hl":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, actionsSprites[5]);
+				; break;
+			case "sb":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, actionsSprites[6]);
+				; break;
+
+			case "fun":
+				programBlocks[x, y].SetProgrElem(ProgrElem.Func, funkSprites[0]);
+				; break;
+			case "+fun":
+				programBlocks[x, y].SetProgrElem(ProgrElem.Func, funkSprites[1]);
+				; break;
+
+			case "ver":
+				#region определение направления проверки
+				switch (ProgramAdressesAndData[x, y + firstLine].x)
+				{
+					case 1:
+						switch (ProgramAdressesAndData[x, y + firstLine].y)
+						{
+							case 1:
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[2]);
+								; break;
+							case 0:
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[1]);
+								; break;
+							case -1:
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[0]);
+								; break;
+						}
+						; break;
+					case 0:
+						switch (ProgramAdressesAndData[x, y + firstLine].y)
+						{
+							case 1:
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[5]);
+								; break;
+							case 0:
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[4]);
+								; break;
+							case -1:
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[3]);
+								; break;
+						}
+						; break;
+					case -1:
+						switch (ProgramAdressesAndData[x, y + firstLine].y)
+						{
+							case 1:
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[6]);
+								; break;
+							case 0:
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[7]);
+								; break;
+							case -1:
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[8]);
+								; break;
+						}
+						; break;
+				}
+				#endregion
+						; break;
+			case "ifT":
+				programBlocks[x, y].SetProgrElem(ProgrElem.If, ifSprites[0]);
+				; break;
+			case "ifF":
+
+				programBlocks[x, y].SetProgrElem(ProgrElem.If, ifSprites[1]);
+				; break;
+			case "end":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, startEndSprites[1]);
+				; break;
+			case "ret":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, returnSprites[0]);
+				; break;
+			case "jmp":
+				programBlocks[x, y].SetProgrElem(ProgrElem.Jmp, jmpSprite);
+				; break;
+			case "+ret":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, returnSprites[1]);
+				; break;
+			case "next":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, noneNextSprites[1]);
+				; break;
+		}
+	}
+
+	public void ProgramScroll() {
+		firstLine = (int)(scrollbar.value * (pageY - 12));
+		for (int i = 0;i < 12; i++) {
+			lineNum[i].text = "" + (i + firstLine);
+		}
+		ProgrPanelUpdate();
 	}
 
 	#endregion
@@ -608,22 +854,24 @@ public class Vec2i
 	}
 }
 
-//{ "S","jmp0001","","","","","","","","","","","","","","end",},//0
-//	{ "ver0001","blck","ifT0002","U","jmp0001","","","","","","","","","","","",},
-//	{ "ver0100","blck","ifT0009","","jmp0005","","","","","","","","","","","",},
-//	{ "","","","","","","","","","","","","","","","",},
-	
-//	{ "","","","","","","","","","","","","","","","",},//4
-//	{ "ver0100","blck","ifT0006","R","jmp0005","","","","","","","","","","","",},
-//	{ "ver00-1","blck","ifT0001","","jmp0013","","","","","","","","","","","",},
-//	{ "","","","","","","","","","","","","","","","",},
+//string[,] program0 = new string[pageY, pageX] {
+//			{ "S","jmp0001","","","","","","","","","","","","","","end",},//0
+//			{ "ver0001","blck","ifT0002","U","jmp0001","","","","","","","","","","","",},
+//			{ "ver0100","blck","ifT0009","","jmp0005","","","","","","","","","","","",},
+//			{ "","","","","","","","","","","","","","","","",},
 
-//	{ "","","","","","","","","","","","","","","","",},//8
-//	{ "ver-100","blck","ifT0010","L","jmp0009","","","","","","","","","","","",},
-//	{ "ver0001","blck","ifT0013","","jmp0001","","","","","","","","","","","",},
-//	{ "","","","","","","","","","","","","","","","",},
-	
-//	{ "","","","","","","","","","","","","","","","",},//12
-//	{ "ver00-1","blck","ifT0014","D","jmp0013","","","","","","","","","","","",},
-//	{ "ver-100","blck","ifT0005","","jmp0009","","","","","","","","","","","",},
-//	{ "","","","","","","","","","","","","","","","",},
+//			{ "","","","","","","","","","","","","","","","",},//4
+//			{ "ver0100","blck","ifT0006","R","jmp0005","","","","","","","","","","","",},
+//			{ "ver00-1","blck","ifT0001","","jmp0013","","","","","","","","","","","",},
+//			{ "","","","","","","","","","","","","","","","",},
+
+//			{ "","","","","","","","","","","","","","","","",},//8
+//			{ "ver-100","blck","ifT0010","L","jmp0009","","","","","","","","","","","",},
+//			{ "ver0001","blck","ifT0013","","jmp0001","","","","","","","","","","","",},
+//			{ "","","","","","","","","","","","","","","","",},
+
+//			{ "","","","","","","","","","","","","","","","",},//12
+//			{ "ver00-1","blck","ifT0014","D","jmp0013","","","","","","","","","","","",},
+//			{ "ver-100","blck","ifT0005","","jmp0009","","","","","","","","","","","",},
+//			{ "","","","","","","","","","","","","","","","",},
+//		};
