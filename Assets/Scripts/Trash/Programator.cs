@@ -22,7 +22,11 @@ public class Programator : MonoBehaviour {
 	public GameObject IfPrefab;//оператор ветвления
 	public GameObject JmpPrefab;//перенос по адресу
 	public GameObject LabelPrefab;//именованная ячейка
+	public GameObject alFuncBlocksPrefab;//все программные блоки и скрипт для обращения к ним
 
+	AllProgramBlocksController[,] programBlocks;//Массив программных блоков
+	GameObject[,] programCells;//Массив программных ячеек
+	Text[] lineNum;//Массив номеров ячеек
 	#endregion
 	[Space]
 	public bool progrActive = false;
@@ -68,13 +72,31 @@ public class Programator : MonoBehaviour {
 		stack = new Vec2i[stackVolume];
 		chunkLoad = GameObject.Find("ChunkLoader").GetComponent<ChankLoad>();
 
-		for (int i = 0;i < 12; i++) {
-			GameObject line = Instantiate(LinePrefab, programLines[i].transform);
-			//GameObject[] cells = line.GetComponentsInChildren<GameObject>();
-			//for (int ii = 0; ii < 16; ii++)
-			//{
-			//	Instantiate(FuncPrefab, cells[ii].transform, false);
-			//}
+		programBlocks = new AllProgramBlocksController[16, 12];//Массив всех программных блоков на поле программатора(для упрощенного доступа)
+		programCells = new GameObject[16,12];//Массив всех программных ячеек на поле программатора(для упрощенного доступа)
+		lineNum = new Text[12];//таблица с номерами строк (при скроле переключение номеров)
+
+		for (int i = 0;i < 12; i++) {//прохождение по строкам и создание для них ячеек на основе префаба с ячейками
+			GameObject line = Instantiate(LinePrefab, programLines[i].transform);//создание строки ячеек
+
+			GameObject[] cells = line.GetComponent<LineCells>().Cells;//изъятие из скрипта на строке ссылок на его ячейки
+
+			lineNum[i] = line.GetComponent<LineCells>().text;
+			lineNum[i].text = "" + i;
+
+			for (int ii = 0; ii < 16; ii++)
+			{
+				programCells[ii, i] = cells[ii];//добавление в массив ячеек ссылок на ячейки строки
+				programBlocks[ii,i] = Instantiate(alFuncBlocksPrefab, cells[ii].transform, false).GetComponent<AllProgramBlocksController>();//составление таблицы программных блоков
+				cells[ii].GetComponent<EnterSensor>().x = ii;
+				cells[ii].GetComponent<EnterSensor>().y = i;
+			}
+			EnterSensor.programator = this;
+
+			//Мой гениальный способ удалять баг с отображенрием меню при первом открытии
+			//БЕЗ ЭТОЙ ФИЧИ ВСЕ СЛЕТАЕТ
+			panelProgramator.SetActive(true);
+			panelProgramator.SetActive(false);
 		}
 
 		program = new string[pageX, pageY] {
@@ -530,6 +552,11 @@ public class Programator : MonoBehaviour {
 		}
 	}
 
+
+	public void CellIsSelect(int x,int y) {
+		Debug.Log(x +" "+ y);
+		programBlocks[x, y].SetProgrElem(ProgrElem.Func);
+	}
 
 	#endregion
 }
