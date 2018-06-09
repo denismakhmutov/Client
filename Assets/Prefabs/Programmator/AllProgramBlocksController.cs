@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class AllProgramBlocksController : MonoBehaviour {
@@ -20,13 +18,15 @@ public class AllProgramBlocksController : MonoBehaviour {
 
 	//Выбор программного элемента для отображения
 	public void SetProgrElem(ProgrElem element,Sprite sprite) {
-
-
+		currentProgElem = element;
 		for (int i = 0; i < 5; i++)
 		{
 			if (element == (ProgrElem)i) {
 				programElements[i].SetActive(true);
 				programElements[i].GetComponent<Image>().sprite = sprite;
+				if (element > 0) {
+					inputFields[i - 1].text = Vec2iToSTR(programmatorref.ProgramAdressesAndData[x,y + programmatorref.firstLine]);
+				}
 			}
 			else {
 				programElements[i].SetActive(false);
@@ -34,8 +34,39 @@ public class AllProgramBlocksController : MonoBehaviour {
 		}
 	}
 
+	string Vec2iToSTR(Vec2i vec) {
+		string sx;
+		string sy;
+
+		if (vec.x < 0) {;
+			return "";
+		}
+		else  {
+			if (vec.x < 10)
+			{
+				sx = string.Concat("0", vec.x.ToString());
+			}
+			else {
+				sx = vec.x.ToString();
+			}
+
+			if (vec.y < 10)
+			{
+				sy = string.Concat("0", vec.y.ToString());
+			}
+			else
+			{
+				sy = vec.y.ToString();
+			}
+
+			return (sx + sy);
+		}
+
+	}
+
 	public void SetProgrElem(int element, Sprite sprite)
 	{
+		currentProgElem = (ProgrElem)element;
 		for (int i = 0; i < 5; i++)
 		{
 			if (element == i)
@@ -50,16 +81,25 @@ public class AllProgramBlocksController : MonoBehaviour {
 		}
 	}
 
-	//принимает сообщение про изменение данных про адрес
+	//принимает сообщение про изменение в строке в инпут фиелде
+	//игнорирует изменения если это изменения программные (если клава разблочена, значит изменение из-за скролла)
 	public void AdrChange() {
-		programmatorref.AdresIsChanged(x,y);
+		if (!programmatorref.keyboardRead) {
+			int adrx = 0;
+			int adry = 0;
+
+			string text = inputFields[(int)currentProgElem - 1].text;
+			if (text.Length == 4)
+			{
+				adrx = int.Parse(text.Substring(0, 2));
+				adry = int.Parse(text.Substring(2, 2));
+			}
+			programmatorref.AdresIsChanged(x, y, adrx, adry);
+		}
 	}
 
-	void Start()
-	{
-		//for (int i = 1; i < 5; i++) {
-		//	programElements[i].SetActive(false);//выключение лишних элементов
-		//}
+	public void keyReadBlock() {
+		programmatorref.BlockKeyboard();
 	}
 }
 

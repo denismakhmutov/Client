@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class CharactControl : MonoBehaviour {
 
+	public bool actionsIsAlloved = true;//если true- действия типа движения, геологии, лечения и т.п. разрешены
+
 	public ChankLoad chankLoadScript;//ссылка на скрипт чанклоадера
 	public Transform cameraTransform;//трансформ камеры
 	public Transform characterMoveTarget;//трансформ таргета персонажа
@@ -82,6 +84,7 @@ public class CharactControl : MonoBehaviour {
 	readonly float moveSpeed = 13f;//Скорость реакции бота на таргет
 	void FixedUpdate()
 	{
+		//Все действия имеют кулдаун, поэтому чтобы запретить действия, нужно просто отключить это место
 		if (!inBuilding)//если бот не в здании
 		{
 			//сокращение накопленного кулдауна
@@ -97,18 +100,20 @@ public class CharactControl : MonoBehaviour {
 				godMode = !godMode;
 			}
 		}
-		if (Input.GetKeyUp(KeyCode.E))//автокопа
-		{
-			autoDig = !autoDig;
-			buttonAutoDig.SetActive(!autoDig);
-		}
-		if (Input.GetKeyUp(KeyCode.V))//Хилка
-		{
-			healAnimationController.AnimActive(characTransform);
-		}
-		if (Input.GetKey(KeyCode.Z))//копание на кнопку
-		{
+		if (actionsIsAlloved) {
+			if (Input.GetKeyUp(KeyCode.E))//автокопа
+			{
+				autoDig = !autoDig;
+				buttonAutoDig.SetActive(!autoDig);
+			}
+			else if (Input.GetKeyUp(KeyCode.V))//Хилка
+			{
+				healAnimationController.AnimActive(characTransform);
+			}
+			else if (Input.GetKey(KeyCode.Z))//копание на кнопку
+			{
 				MessageToServer('D', robotDir);
+			}
 		}
 
 		characterMoveTarget.position = moveTarget;
@@ -126,14 +131,12 @@ public class CharactControl : MonoBehaviour {
 		{
 			moveSeries = 1;
 		}
-		if ((Time.unscaledTime - lastStepTime) >= (timeDelay + accelerationCoef / (moveSeries * 3)) && !inBuilding)
+		if ((Time.unscaledTime - lastStepTime) >= (timeDelay + accelerationCoef / (moveSeries * 3)) && !inBuilding && actionsIsAlloved)
 		{
 			if (CharactControlWhithKeyboard())
 			{
 				lastStepTime = Time.unscaledTime;
 				moveSeries++;
-				//Debug.Log(lastStepTime);
-				//Debug.Log(moveSeries);
 			}
 		}
 
@@ -170,10 +173,12 @@ public class CharactControl : MonoBehaviour {
 		if (cooldown < 0.002f)
 		{
 			float block = ChankMapVal((int)moveTarget.x, (int)moveTarget.y);
-			if ((block == 4) || (block == 5)) {
+			if ((block == 4) || (block == 5))
+			{
 				cooldown += movePlusCD;
 			}
-			else {
+			else
+			{
 				cooldown += moveCD - (block / 200);
 			}
 			switch (direction)
@@ -191,10 +196,12 @@ public class CharactControl : MonoBehaviour {
 				case 'R':
 					moveTarget = new Vector3((int)moveTarget.x + 1 + 0.5f, (int)moveTarget.y + 0.5f, Z);
 					TargetRotate(direction);
+					MessageToServer('m', 'R');
 					break;
 				case 'L':
 					moveTarget = new Vector3((int)moveTarget.x - 1 + 0.5f, (int)moveTarget.y + 0.5f, Z);
 					TargetRotate(direction);
+					MessageToServer('m', 'L');
 					break;
 			}
 		}

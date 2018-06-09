@@ -38,12 +38,16 @@ public class Programator : MonoBehaviour {
 	public Sprite[] actionsSprites = new Sprite[7];//
 
 	public int firstLine = 0;//указывает, с какой строки начинать отображение на экране (зависит от скрола)
+
+	Vec2i coorSelectCell = new Vec2i(0,0);//Координаты выбранной ячейки на программной панели
+
+	public bool keyboardRead = true;//если тру, то можно устанавливать программные блоки, если фолз-нельзя
 	#endregion
 	[Space]
 	public bool progrActive = false;
 
 	public const int pageX = 16;
-	public const int pageY = 64;
+	public const int pageY = 100;
 
 	public int tactsPerFrame = 1;//тактов на один кадр
 	public int TactsForCD = 0;//такты бездействия. разные функции дают разное количество единиц бездействия
@@ -60,7 +64,7 @@ public class Programator : MonoBehaviour {
 	//массив команд программы
 	string[,] ProgramComands;
 	//Ьфссив адресов и данных (в основном будет использоваться для адресов)
-	Vec2i[,] ProgramAdressesAndData;
+	public Vec2i[,] ProgramAdressesAndData;
 	/// <summary>
 	///если был определен опратор "условия" то режим проверки включается
 	///и все операторы сдвига принимаются для перемещения точки слежки
@@ -121,20 +125,20 @@ public class Programator : MonoBehaviour {
 			{ "","","","","","","","","","","","","","","","",},
 			{ "","","","","","","","","","","","","","","","",},
 
-			{ "","S","","","","","","","","","","","","","","",},//4
+			{ "","","","","","","","","","","","","","","","",},//4
 			{ "","","","","","","","","","","","","","","","",},
 			{ "","","","","","","","","","","","","","","","",},
 			{ "","","","","","","","","","","","","","","","",},
 
-			{ "","","S","","","","","","","","","","","","","",},//8
+			{ "","","","","","","","","","","","","","","","",},//8
 			{ "","","","","","","","","","","","","","","","",},
 			{ "","","","","","","","","","","","","","","","",},
 			{ "","","","","","","","","","","","","","","","",},
 
-			{ "","","","S","","","","","","","","","","","","",},//12
+			{ "","","","","","","","","","","","","","","","",},//12
 			{ "","","","","","","","","","","","","","","","",},
 			{ "","","","","","","","","","","","","","","","",},
-			{ "","","","","","","","","","","","","","","","end",},
+			{ "","","","","","","","","","","","","","","","",},
 		};
 
 		ProgramComands = new string[pageX, pageY];
@@ -160,26 +164,45 @@ public class Programator : MonoBehaviour {
 
 	// Update is called once per frame
 	void FixedUpdate() {
-		for (int n = 0; n < tactsPerFrame; n++)
-			if (progrActive)
-			{
+		if (progrActive){
+			for (int n = 0; n < tactsPerFrame; n++) {
 				if (TactsForCD == 0)
 				{
 					ProgramTactUpdate();//выполнение следубщего шага программы
 				}
-				else {
+				else
+				{
 					--TactsForCD;
 				}
 			}
-			else {
-				//сброс всех значений для корректного старта программы
-				currStep = 0;
-				stackLvl = 0;
-				verificationMode = false;
-				//logOp = LogOp.NULL;
-			}
-		if(panelProgramator.activeSelf){
+		}
+		else {
+			//сброс всех значений для корректного старта программы
+			currStep = 0;
+			stackLvl = 0;
+			verificationMode = false;
+			//logOp = LogOp.NULL;
+		}
+	}
+
+	private void Update(){
+		if (panelProgramator.activeSelf)
+		{
 			ProgramExecutionInfoUpdate();//Инфа о процессе работы программатора
+
+			if (Time.frameCount % 6 == 0)
+			{
+				ProgActiveText();
+			}
+
+			if (keyboardRead)
+			{
+				SetProgramElementWthKey();
+				if (Time.frameCount % 2 == 0)
+				{
+					ProgramScrollWithMouse();
+				}
+			}
 		}
 	}
 
@@ -226,7 +249,9 @@ public class Programator : MonoBehaviour {
 				verificationMode = false;
 				; break;
 			case "ret"://завершение подпрограммы и возврат на предыдущий уровень стека
-				--stackLvl;
+				if (stackLvl > 0) {
+					--stackLvl;
+				}
 				verificationMode = false;
 				; break;
 			case "+ret"://завершение подпрограммы с возвратом булевого значения и возврат на предыдущий уровень стека
@@ -554,12 +579,17 @@ public class Programator : MonoBehaviour {
 	//Включение и выключение программы
 	public void ProgramActive() {
 		progrActive = !progrActive;
+		ProgActiveText();
+	}
+
+	void ProgActiveText() {
 		if (progrActive)
 		{
 			startStopButtonText.text = "STOP";
 			startStopButtonText.color = new Color(1, 0, 0.05f);
 		}
-		else {
+		else
+		{
 			startStopButtonText.text = "START";
 			startStopButtonText.color = new Color(0, 1, 0.05f);
 		}
@@ -601,18 +631,34 @@ public class Programator : MonoBehaviour {
 
 	//вызывается клеткой, над которой сейчас курсор
 	public void CellIsSelect(int x,int y) {
-		Debug.Log("Select  " + x +" "+ y);
+		//Debug.Log("Select  " + x +" "+ y);
+		coorSelectCell.x = x;
+		coorSelectCell.y = y;
 	}
 
-	public void AdresIsChanged(int x, int y)
+	public void AdresIsChanged(int x, int y,int adrx, int adry)
 	{
-		Debug.Log("Changed  " + x + " " + y);
+		ProgramAdressesAndData[x, y + firstLine].x = adrx;
+		ProgramAdressesAndData[x, y + firstLine].y = adry;
+
+		keyboardRead = true;
+		Debug.Log("key unblock");
+		Debug.Log("Changed  " + x + " " + y + "data:" + adrx + " " + adry);
 	}
 
-	//включение панели программатора
-	public void ProgramatorPanelActive() {
-		panelProgramator.SetActive(true);
-		ProgrPanelUpdate();
+	//блокировка считывания клавиш для сеттера программных блоков
+	public void BlockKeyboard() {
+		keyboardRead = false;
+		Debug.Log("key block");
+	}
+
+	//включение или выключение панели программатора. Если включение, панель обновляется
+	public void ProgramatorPanelActive(bool mode) {
+		panelProgramator.SetActive(mode);
+		charactControl.actionsIsAlloved = !mode;
+		if (mode) {
+			ProgrPanelUpdate();
+		}
 	}
 
 	//Обновление всей панели программатора
@@ -629,6 +675,7 @@ public class Programator : MonoBehaviour {
 	void ProgElementUpdate(int x, int y) {
 		switch (ProgramComands[x, y + firstLine])
 		{
+			#region
 			case "":
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, noneNextSprites[0]);
 				; break;
@@ -686,10 +733,10 @@ public class Programator : MonoBehaviour {
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, orAndSprites[1]);
 				; break;
 
-			case "blc":
+			case "bl":
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, blockOrNoSprites[0]);
 				; break;
-			case "/blc":
+			case "/bl":
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, blockOrNoSprites[1]);
 				; break;
 
@@ -733,10 +780,10 @@ public class Programator : MonoBehaviour {
 								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[2]);
 								; break;
 							case 0:
-								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[1]);
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[5]);
 								; break;
 							case -1:
-								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[0]);
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[8]);
 								; break;
 						}
 						; break;
@@ -744,13 +791,13 @@ public class Programator : MonoBehaviour {
 						switch (ProgramAdressesAndData[x, y + firstLine].y)
 						{
 							case 1:
-								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[5]);
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[1]);
 								; break;
 							case 0:
 								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[4]);
 								; break;
 							case -1:
-								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[3]);
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[7]);
 								; break;
 						}
 						; break;
@@ -758,13 +805,13 @@ public class Programator : MonoBehaviour {
 						switch (ProgramAdressesAndData[x, y + firstLine].y)
 						{
 							case 1:
-								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[6]);
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[0]);
 								; break;
 							case 0:
-								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[7]);
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[3]);
 								; break;
 							case -1:
-								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[8]);
+								programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, verifSprites[6]);
 								; break;
 						}
 						; break;
@@ -784,18 +831,250 @@ public class Programator : MonoBehaviour {
 			case "ret":
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, returnSprites[0]);
 				; break;
-			case "jmp":
-				programBlocks[x, y].SetProgrElem(ProgrElem.Jmp, jmpSprite);
-				; break;
 			case "+ret":
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, returnSprites[1]);
+				; break;
+			case "jmp":
+				programBlocks[x, y].SetProgrElem(ProgrElem.Jmp, jmpSprite);
 				; break;
 			case "next":
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, noneNextSprites[1]);
 				; break;
+				#endregion
 		}
 	}
 
+	string[] moveCodes = new string[] {
+		"U","D","L","R",
+	};
+	string[] rotatCodes = new string[] {
+		"u","d","l","r",
+	};
+	string[] ifCodes = new string[] {
+		"ifT","ifF",
+	};
+	string[] funcCodes = new string[] {
+		"fun","+fun",
+	};
+	string[] retCodes = new string[] {
+		"ret","+ret",
+	};
+	string[] startendCodes = new string[] {
+		"S","end",
+	};
+	string[] cristallsCodes = new string[] {
+		"gc","bc","rc","wc","vc","cc",
+	};
+	string[] rockFituresCodes = new string[] {//Особенности породы (и ее отсутствие)
+		"bl","/bl",
+	};
+	string nextLineCode = "next";
+	string jmpCode = "jmp";
+
+
+	//установка программного элемента кнопками
+	void SetProgramElementWthKey() {
+		//ЗАЖАТЫЙ ШИФТ
+		if (Input.GetKey(KeyCode.LeftShift)) {
+			if (Input.GetKeyDown(KeyCode.Z))
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = "dg";
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else if (Input.GetKeyDown(KeyCode.W))
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[0];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else if (Input.GetKeyDown(KeyCode.S))
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[1];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else if (Input.GetKeyDown(KeyCode.A))
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[2];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else if (Input.GetKeyDown(KeyCode.D))
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[3];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else if (Input.GetKeyDown(KeyCode.C)){//выбор свойств породы
+				string comand = ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine];
+				for (int i = 0; i < 2; i++)
+				{
+					if (comand == rockFituresCodes[0])
+					{
+						ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rockFituresCodes[(i + 1) % 2];
+						break;
+					}
+					else if (i == 1)
+					{
+						ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rockFituresCodes[0];
+					}
+				}
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+		}
+		//ЗАЖАТЫЙ КОНТРОЛЛ
+		else if (Input.GetKey(KeyCode.LeftControl))
+		{
+			if (Input.GetKeyDown(KeyCode.W))
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = "ver";
+				if (ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine].y < 1) {
+					++ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine].y;
+				}
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else if (Input.GetKeyDown(KeyCode.S))
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = "ver";
+				if (ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine].y > -1)
+				{
+					--ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine].y;
+				}
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else if (Input.GetKeyDown(KeyCode.A))
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = "ver";
+				if (ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine].x > -1)
+				{
+					--ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine].x;
+				}
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else if (Input.GetKeyDown(KeyCode.D))
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = "ver";
+				if (ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine].x < 1)
+				{
+					++ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine].x;
+				}
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+		}
+		else if (Input.GetKeyDown(KeyCode.C)){//выбор кристалла 
+			string comand = ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine];
+			for (int i = 0; i < 6; i ++) {
+				if (comand == cristallsCodes[i]) {
+					ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = cristallsCodes[(i + 1) % 6];
+					break;
+				}
+				else if (i == 5) {
+					ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = cristallsCodes[0];
+				}
+			}
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.Q)){//кнопка установки начала и конца проги
+			if (ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] == startendCodes[0]){
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = startendCodes[1];
+			}
+			else{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = startendCodes[0];
+			}
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.I)){//кнопка выбора ветвления
+			if (ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] == ifCodes[0]){
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = ifCodes[1];
+			}
+			else{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = ifCodes[0];
+			}
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.F)){//кнопка выбора входа в функцию
+			if (ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] == funcCodes[0]){
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = funcCodes[1];
+			}
+			else{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = funcCodes[0];
+			}
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.R))
+		{
+			if (ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] == retCodes[0]){
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = retCodes[1];
+			}
+			else{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = retCodes[0];
+			}
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.Backspace))
+		{
+			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = nextLineCode;
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.W))
+		{
+			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[0];
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.S))
+		{
+			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[1];
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.A))
+		{
+			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[2];
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.D))
+		{
+			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[3];
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.Delete))
+		{
+			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = "";
+			ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine] = new Vec2i(0, 0);
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.G))
+		{
+			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = jmpCode;
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+	}
+
+	//управление скроллом через мышь
+	void ProgramScrollWithMouse()
+	{
+		//при нажатии на скролл блокировка спадает, но во избежание пролетов сделана проверка
+		if (keyboardRead) {
+			float Zoom = Input.GetAxis("Mouse ScrollWheel");
+			if (Zoom > 0)
+			{
+				float maxSLine = pageY - 12;
+
+				if (firstLine > 0)
+				{
+					--firstLine;
+				}
+				scrollbar.value = firstLine / maxSLine;
+			}
+			else if (Zoom < 0)
+			{
+				float maxSLine = pageY - 12;
+
+				if (firstLine < maxSLine)
+				{
+					++firstLine;
+				}
+				scrollbar.value = firstLine / maxSLine;
+			}
+		}
+	}
+
+	//Скролл программы через скроллбар
 	public void ProgramScroll() {
 		firstLine = (int)(scrollbar.value * (pageY - 12));
 		for (int i = 0;i < 12; i++) {

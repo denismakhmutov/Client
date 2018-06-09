@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 
 public class EnterSensor : MonoBehaviour {
 	public static Programator programator;
@@ -11,5 +10,4 @@ public class EnterSensor : MonoBehaviour {
 	{
 		programator.CellIsSelect(x, y);
 	}
-
 }
