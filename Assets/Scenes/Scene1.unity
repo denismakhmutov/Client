@@ -62012,8 +62012,8 @@ MonoBehaviour:
   - {fileID: 21300014, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
   - {fileID: 21300016, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
   ifSprites:
-  - {fileID: 21300034, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
   - {fileID: 21300036, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300034, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
   orAndSprites:
   - {fileID: 21300038, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
   - {fileID: 21300040, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
@@ -62059,7 +62059,15 @@ MonoBehaviour:
   - {fileID: 21300160, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
   - {fileID: 21300162, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
   - {fileID: 21300164, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  buildingBlocksVerSprites:
+  - {fileID: 21300180, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300184, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300182, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300192, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300188, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
+  - {fileID: 21300190, guid: 04c411cceeb89b34586636c3e03b61b4, type: 3}
   firstLine: 0
+  keyboardRead: 1
   progrActive: 0
   tactsPerFrame: 1
   TactsForCD: 0

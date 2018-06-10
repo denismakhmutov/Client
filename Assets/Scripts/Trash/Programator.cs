@@ -36,6 +36,7 @@ public class Programator : MonoBehaviour {
 	public Sprite[] startEndSprites = new Sprite[2];//
 	public Sprite[] blockOrNoSprites = new Sprite[2];//
 	public Sprite[] actionsSprites = new Sprite[7];//
+	public Sprite[] buildingBlocksVerSprites = new Sprite[6];//проверки на строительные блоки
 
 	public int firstLine = 0;//указывает, с какой строки начинать отображение на экране (зависит от скрола)
 
@@ -198,10 +199,7 @@ public class Programator : MonoBehaviour {
 			if (keyboardRead)
 			{
 				SetProgramElementWthKey();
-				if (Time.frameCount % 2 == 0)
-				{
-					ProgramScrollWithMouse();
-				}
+				ProgramScrollWithMouse();
 			}
 		}
 	}
@@ -298,6 +296,29 @@ public class Programator : MonoBehaviour {
 				verificationMode = false;
 				; break;
 			#endregion
+			#region 
+			case "dg"://колупать
+				
+				; break;
+			case "mb"://строить основные блоки
+				
+				; break;
+			case "ge"://геология
+				
+				; break;
+			case "al"://Кричалка
+				
+				; break;
+			case "ro"://строить дорогу
+				
+				; break;
+			case "hl"://лека
+				
+				; break;
+			case "sb"://строить вторичные блоки
+				
+				; break;
+			#endregion
 			#region указатели логических операций
 			case "or":
 				logOp = LogOp.OR;
@@ -307,162 +328,199 @@ public class Programator : MonoBehaviour {
 				; break;
 			#endregion
 			#region команды с параметром
-			default:
-				string com = ProgramComands[stack[stackLvl].x, stack[stackLvl].y];//ПОМЕНЯТЬ В БУДУЩЕМ ИКС И ИГРЕК МЕСТАМИ. СЕЙЧАС ТАК ДЛЯ ДЕБАГА
+			case "jmp"://перемещение на указанный адрес (без переноса значения)
+				Debug.Log("jmp");
+				Debug.Log("stackLvl " + stackLvl);
+				stack[stackLvl] = new Vec2i(ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].x - 1, ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].y);
+				//stack[stackLvl].x = -1;
+				//stack[stackLvl].y = 0;
 
-				if (Ident("jmp", com))
-				{//перемещение на указанный адрес (без переноса значения)
-					Debug.Log("jmp");
-					stack[stackLvl].x = int.Parse(com.Substring(3, 2)) - 1;
-					stack[stackLvl].y = int.Parse(com.Substring(5, 2));
-					verificationMode = false;
-				}
-				else if (Ident("fun", com))
-				{//вход в подпрограмму по адресу (без переноса значения)
-					Debug.Log("fun");
-					++stackLvl;//поднятие на уровень выше в стеке
-					stack[stackLvl].x = int.Parse(com.Substring(3, 2)) - 1;
-					stack[stackLvl].y = int.Parse(com.Substring(5, 2));
-					verificationMode = false;
-				}
+				//Debug.Log("ProgramAdressesAndData:" ProgramAdressesAndData[0,0]);
+				verificationMode = false;
+				; break;
+			case "fun"://вход в подпрограмму по адресу (без переноса значения)
+				Debug.Log("fun");
+				++stackLvl;//поднятие на уровень выше в стеке
+				stack[stackLvl] = new Vec2i(ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].x - 1, ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].y);
+				verificationMode = false;
+				; break;
+			case "ver"://Проверка
 				#region проверки 
-				else if (Ident("ver", com))//проверка 
-				{
-					//Активация режима проверки, в котором начнут работать все остальные условные операторы
-					verificationMode = true;
-					boolRegister = false;
+				//Активация режима проверки, в котором начнут работать все остальные условные операторы
+				verificationMode = true;
+				boolRegister = false;
 
-					//координаты по которым надо делать проверку в мире (изначально присваиваются координаты робота)
-					//Потом применяются все сдвиги
-					verCoors = new Vec2i(transform.position.x, transform.position.y);
+				//координаты по которым надо делать проверку в мире (изначально присваиваются координаты робота)
+				//Потом применяются все сдвиги
+				verCoors = new Vec2i(transform.position.x, transform.position.y);
 
-					Debug.Log("ver");
-					Debug.Log("Кооры робота " + (int)transform.position.x + " : " + (int)transform.position.y);
-					Debug.Log("Сдвиг для проверки " + int.Parse(com.Substring(3, 2)) + "  " + int.Parse(com.Substring(5, 2)));
-					//Применение к проверке собственного сдвига
-					verCoors.x += int.Parse(com.Substring(3, 2));
-					verCoors.y += int.Parse(com.Substring(5, 2));
+				Debug.Log("ver");
+				Debug.Log("Кооры робота " + (int)transform.position.x + " : " + (int)transform.position.y);
+				Debug.Log("Сдвиг для проверки " + ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].x + "  " + ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].y);
+				//Применение к проверке собственного сдвига
+				verCoors.x += ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].x;
+				verCoors.y += ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].y;
 
-					verCoorsV2 = verCoors.Vector2Set();//вывод на инспектор координат проверки
+				verCoorsV2 = verCoors.Vector2Set();//вывод на инспектор координат проверки
 
-					Debug.Log("Кооры из собственным сдвигом проверки " + verCoors.x + " : " + verCoors.y);
+				Debug.Log("Кооры из собственным сдвигом проверки " + verCoors.x + " : " + verCoors.y);
 
-					//Поиск операторов сдвига после оператора проверки
-					//Поиск условий типа блок и т.п
-				}
+				//Поиск операторов сдвига после оператора проверки
+				//Поиск условий типа блок и т.п
 				#endregion
+				; break;
+			default:
+
+				string com = ProgramComands[stack[stackLvl].x, stack[stackLvl].y];
+				
 				#region метки блоков для логических операций (работают только если режим проверок включен)
-				else if (verificationMode)
+				if (verificationMode)
 				{
 					result = false;//переменная для получения результата сравнения.
 					bool verIsPassed = false;//указатель на то, что какая-то из проверок была выполнена
 					switch (com)
 					{
-						case "blc":
-							if (chunkLoad.ChunkMapVal(verCoors) > 5)
-							{//все объекты после ИД5 являются блоками
+						#region
+						case "bl":
+							if (chunkLoad.ChunkMapVal(verCoors) > 5){//все объекты после ИД5 являются блоками
 								result = true;
-								verIsPassed = true;
-								Debug.Log("blc");
+
+								Debug.Log("bl");
 							}
-							else
-							{
-								verIsPassed = true;
-							}
+							verIsPassed = true;
+							Debug.Log("chunkLoad.ChunkMapVal(verCoors)   " + chunkLoad.ChunkMapVal(verCoors));
 							; break;
-						case "/blc":
-							if (chunkLoad.ChunkMapVal(verCoors) < 6)
-							{//все объекты до ИД6 не являются блоками
+						case "/bl":
+							if (chunkLoad.ChunkMapVal(verCoors) < 6){//все объекты до ИД6 не являются блоками
 								result = true;
-								verIsPassed = true;
-								Debug.Log("/blc");
+								Debug.Log("/bl");
 							}
-							else
-							{
-								verIsPassed = true;
-							}
+							verIsPassed = true;
 							; break;
+						#region проверка на стройблоки
 						case "gb":
-							if (chunkLoad.ChunkMapVal(verCoors) == 36)
-							{//Зелёный блок
+							if (chunkLoad.ChunkMapVal(verCoors) == 36){//Зелёный блок
 								result = true;
-								verIsPassed = true;
 								Debug.Log("grnBl");
 							}
-							else
-							{
-								verIsPassed = true;
-							}
+							verIsPassed = true;
 							; break;
 						case "ob":
-							if (chunkLoad.ChunkMapVal(verCoors) == 37)
-							{//оранжевый блок
+							if (chunkLoad.ChunkMapVal(verCoors) == 37){//оранжевый блок
 								result = true;
-								verIsPassed = true;
 								Debug.Log("ornBl");
 							}
-							else
-							{
-								verIsPassed = true;
-							}
+							verIsPassed = true;
 							; break;
 						case "rb":
-							if (chunkLoad.ChunkMapVal(verCoors) == 38)
-							{//красный блок
+							if (chunkLoad.ChunkMapVal(verCoors) == 38){//красный блок
 								result = true;
-								verIsPassed = true;
 								Debug.Log("redBl");
 							}
-							else
-							{
-								verIsPassed = true;
+							verIsPassed = true;
+							; break;
+						case "fb":
+							if (chunkLoad.ChunkMapVal(verCoors) == 39){//опора
+								result = true;
+								Debug.Log("fb");
+							}
+							verIsPassed = true;
+							; break;
+						case "qb":
+							if (chunkLoad.ChunkMapVal(verCoors) == 40){//квадроблок
+								result = true;
+								Debug.Log("qb");
+							}
+							verIsPassed = true;
+							; break;
+						case "roa":
+							if ((chunkLoad.ChunkMapVal(verCoors) == 4) || (chunkLoad.ChunkMapVal(verCoors) == 5)){//квадроблок
+								result = true;
+								Debug.Log("ver road");
+							}
+							verIsPassed = true;
+							; break;
+						#endregion
+						#endregion
+						#region операторы ветвления
+						case "ifT"://Переход по ссылке если регистр положительный
+							if (boolRegister){
+								stack[stackLvl] = new Vec2i(ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].x - 1, ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].y);
+								verificationMode = false;
+								logOp = LogOp.NULL;
+								Debug.Log("ifT");
+							}
+							else{
+								verificationMode = false;
+								logOp = LogOp.NULL;
+								Debug.Log("!ifT");
 							}
 							; break;
-						default:
-							#region операторы ветвления
-							if (Ident("ifT", com))
-							{//Переход по ссылке если регистр положительный
-								if (boolRegister)
-								{
-									stack[stackLvl].x = int.Parse(com.Substring(3, 2)) - 1;
-									stack[stackLvl].y = int.Parse(com.Substring(5, 2));
-									verificationMode = false;
-									logOp = LogOp.NULL;
-									Debug.Log("ifT");
-								}
-								else
-								{
-									verificationMode = false;
-									logOp = LogOp.NULL;
-									Debug.Log("!ifT");
-								}
+						case "ifF"://Переход по ссылке если регистр отрицательный
+							if (!boolRegister){
+								stack[stackLvl] = new Vec2i(ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].x - 1, ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].y);
+								verificationMode = false;
+								logOp = LogOp.NULL;
+								Debug.Log("ifF");
 							}
-							else if (Ident("ifF", com))//Переход по ссылке если регистр отрицательный
-							{
-								if (!boolRegister)
-								{
-									stack[stackLvl].x = int.Parse(com.Substring(3, 2)) - 1;
-									stack[stackLvl].y = int.Parse(com.Substring(5, 2));
-									verificationMode = false;
-									logOp = LogOp.NULL;
-									Debug.Log("ifF");
-								}
-								else
-								{
-									verificationMode = false;
-									logOp = LogOp.NULL;
-									Debug.Log("ifF");
-								}
+							else{
+								verificationMode = false;
+								logOp = LogOp.NULL;
+								Debug.Log("ifF");
 							}
 							#endregion
+							; break;
+						#region Проверки на кристаллы
+						case "gc":
+							if (chunkLoad.ChunkMapVal(verCoors) == 12){//Зелёный кри
+								result = true;
+								Debug.Log("gc");
+							}
+							verIsPassed = true;
+							; break;
+						case "bc":
+							if (chunkLoad.ChunkMapVal(verCoors) == 13){//Синий кри
+								result = true;
+								Debug.Log("bc");
+							}
+							verIsPassed = true;
+							; break;
+						case "rc":
+							if (chunkLoad.ChunkMapVal(verCoors) == 14){//Красный кри
+								result = true;
+								Debug.Log("rc");
+							}
+							verIsPassed = true;
+							; break;
+						case "wc":
+							if (chunkLoad.ChunkMapVal(verCoors) == 15){//Белый кри
+								result = true;
+								Debug.Log("wc");
+							}
+							verIsPassed = true;
+							; break;
+						case "vc":
+							if (chunkLoad.ChunkMapVal(verCoors) == 16){//Фиолетовый кри
+								result = true;
+								Debug.Log("vc");
+							}
+							verIsPassed = true;
+							; break;
+						case "cc":
+							if (chunkLoad.ChunkMapVal(verCoors) == 17){//Голубой кри
+								result = true;
+								Debug.Log("cc");
+							}
+							verIsPassed = true;
+							; break;
+						#endregion
+						default:
+
 								; break;
-
 					}
-
-					if (verIsPassed)
-					{
-						switch (logOp)
-						{
+				
+					if (verIsPassed){
+						switch (logOp){
 							case LogOp.NULL://если еще не было меток блоков
 								boolRegister = result;
 								logOp = LogOp.None;
@@ -485,8 +543,7 @@ public class Programator : MonoBehaviour {
 				#endregion
 		}
 
-		if (!verificationMode)
-		{//если режим проверок выключен, все связанные с ним переменные обнуляются
+		if (!verificationMode){//если режим проверок выключен, все связанные с ним переменные обнуляются
 			logOp = 0;
 		}
 
@@ -707,6 +764,7 @@ public class Programator : MonoBehaviour {
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, startEndSprites[0]);
 				; break;
 
+				//Проверки на кристаллы
 			case "gc":
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, CristallsSprites[0]);
 				; break;
@@ -726,6 +784,7 @@ public class Programator : MonoBehaviour {
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, CristallsSprites[5]);
 				; break;
 
+				//Логические операции
 			case "or":
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, orAndSprites[0]);
 				; break;
@@ -733,6 +792,7 @@ public class Programator : MonoBehaviour {
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, orAndSprites[1]);
 				; break;
 
+				//проверка на имение блока
 			case "bl":
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, blockOrNoSprites[0]);
 				; break;
@@ -740,6 +800,7 @@ public class Programator : MonoBehaviour {
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, blockOrNoSprites[1]);
 				; break;
 
+				//выполнение определенных действий со стороны бота(не движения)
 			case "dg":
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, actionsSprites[0]);
 				; break;
@@ -762,6 +823,27 @@ public class Programator : MonoBehaviour {
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, actionsSprites[6]);
 				; break;
 
+				//проверки на строительные блоки
+			case "gb":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, buildingBlocksVerSprites[0]);
+				; break;
+			case "ob":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, buildingBlocksVerSprites[1]);
+				; break;
+			case "rb":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, buildingBlocksVerSprites[2]);
+				; break;
+			case "fb":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, buildingBlocksVerSprites[3]);
+				; break;
+			case "qb":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, buildingBlocksVerSprites[4]);
+				; break;
+			case "roa":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, buildingBlocksVerSprites[5]);
+				; break;
+
+				//входы в функции
 			case "fun":
 				programBlocks[x, y].SetProgrElem(ProgrElem.Func, funkSprites[0]);
 				; break;
@@ -769,6 +851,7 @@ public class Programator : MonoBehaviour {
 				programBlocks[x, y].SetProgrElem(ProgrElem.Func, funkSprites[1]);
 				; break;
 
+				//вклчение режима проверки
 			case "ver":
 				#region определение направления проверки
 				switch (ProgramAdressesAndData[x, y + firstLine].x)
@@ -817,11 +900,14 @@ public class Programator : MonoBehaviour {
 						; break;
 				}
 				#endregion
-						; break;
+				; break;
+
+				//ветвление
 			case "ifT":
 				programBlocks[x, y].SetProgrElem(ProgrElem.If, ifSprites[0]);
 				; break;
 			case "ifF":
+
 
 				programBlocks[x, y].SetProgrElem(ProgrElem.If, ifSprites[1]);
 				; break;
@@ -867,6 +953,9 @@ public class Programator : MonoBehaviour {
 	};
 	string[] rockFituresCodes = new string[] {//Особенности породы (и ее отсутствие)
 		"bl","/bl",
+	};
+	string[] buildingBlocksVerCodes = new string[] {//проверки на строительные блоки (fb - опоры, qb - квадро-блоки, roa - дорога)
+		"gb","ob","rb","fb","qb","roa",
 	};
 	string nextLineCode = "next";
 	string jmpCode = "jmp";
@@ -956,6 +1045,22 @@ public class Programator : MonoBehaviour {
 				}
 				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 			}
+		}
+		else if (Input.GetKeyDown(KeyCode.B)){//выбор проверки на строительные блоки 
+			string comand = ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine];
+			for (int i = 0; i < 6; i++)
+			{
+				if (comand == buildingBlocksVerCodes[i])
+				{
+					ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = buildingBlocksVerCodes[(i + 1) % 6];
+					break;
+				}
+				else if (i == 5)
+				{
+					ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = buildingBlocksVerCodes[0];
+				}
+			}
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
 		else if (Input.GetKeyDown(KeyCode.C)){//выбор кристалла 
 			string comand = ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine];
