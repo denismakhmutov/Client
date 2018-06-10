@@ -85,6 +85,11 @@ public class Programator : MonoBehaviour {
 	//Если идет несколько условий но ни разу не встречается 
 	public LogOp logOp = 0;
 
+	//Используется для того, чтобы в случае, если выполняется процедура действия со стороны персонажа,
+	//не возникало проскоков из-за отката в чарактер контроллере. Программный такт не переключится на новую ячейку пока не получит ответ
+	//позволяющий продолжить работу
+	public bool actionIsDone = true;
+
 	// Use this for initialization
 	void Start() {
 		stack = new Vec2i[stackVolume];
@@ -167,12 +172,10 @@ public class Programator : MonoBehaviour {
 	void FixedUpdate() {
 		if (progrActive){
 			for (int n = 0; n < tactsPerFrame; n++) {
-				if (TactsForCD == 0)
-				{
+				if (TactsForCD == 0){
 					ProgramTactUpdate();//выполнение следубщего шага программы
 				}
-				else
-				{
+				else{
 					--TactsForCD;
 				}
 			}
@@ -205,29 +208,24 @@ public class Programator : MonoBehaviour {
 	}
 
 	void ProgramTactUpdate() {
-		if (currStep == 0)//Если программа только запущена
-		{
-			for (int i = 0; i < stackVolume; i++)
-			{
+		if (currStep == 0){//Если программа только запущена
+			for (int i = 0; i < stackVolume; i++){
 				stack[i] = new Vec2i(0, 0);
 			}
 		}
 
-		if (stack[stackLvl].x == (pageX - 1))//если конец строки
-		{
+		if (stack[stackLvl].x == (pageX - 1)){//если конец строки
 			stack[stackLvl].x = startCoor.x;
 			stack[stackLvl].y = startCoor.y;
 			Debug.Log("stack[stackLvl] = startCoor;" + startCoor.x + " " + startCoor.y);
 		}
-		else
-		{
+		else if(actionIsDone){
 			++stack[stackLvl].x;
 		}
 
-		Debug.Log(stack[stackLvl].x + " " + stack[stackLvl].y);
+		Debug.Log("Выполнение команды ячейки:" + stack[stackLvl].x + " " + stack[stackLvl].y);
 
-		switch (ProgramComands[stack[stackLvl].x, stack[stackLvl].y])
-		{
+		switch (ProgramComands[stack[stackLvl].x, stack[stackLvl].y]){
 			#region примитивные метки
 			case ""://
 				; break;
@@ -298,7 +296,7 @@ public class Programator : MonoBehaviour {
 			#endregion
 			#region 
 			case "dg"://колупать
-				
+				actionIsDone = charactControl.DiggAction();
 				; break;
 			case "mb"://строить основные блоки
 				
@@ -547,43 +545,34 @@ public class Programator : MonoBehaviour {
 			logOp = 0;
 		}
 
-		++currStep;//инкрементация счетчика шагов
+		if (actionIsDone) {
+			++currStep;//инкрементация счетчика шагов
+		}
 	}
 
 	#region функции движения робота
 	void MoveRight() {
-		//transform.position = new Vector3(transform.position.x + 1f, transform.position.y, transform.position.z);
-		charactControl.TargetMove('R');
+		actionIsDone = charactControl.TargetMove('R');
 	}
-	void MoveLeft()
-	{
-		//transform.position = new Vector3(transform.position.x - 1f, transform.position.y, transform.position.z);
-		charactControl.TargetMove('L');
+	void MoveLeft(){
+		actionIsDone = charactControl.TargetMove('L');
 	}
-	void MoveUp()
-	{
-		//transform.position = new Vector3(transform.position.x, transform.position.y + 1f, transform.position.z);
-		charactControl.TargetMove('U');
+	void MoveUp(){
+		actionIsDone = charactControl.TargetMove('U');
 	}
-	void MoveDown()
-	{
-		//transform.position = new Vector3(transform.position.x, transform.position.y - 1f, transform.position.z);
-		charactControl.TargetMove('D');
+	void MoveDown(){
+		actionIsDone = charactControl.TargetMove('D');
 	}
-	void RotatRight()
-	{
+	void RotatRight(){
 		charactControl.TargetRotate('R');
 	}
-	void RotatLeft()
-	{
+	void RotatLeft(){
 		charactControl.TargetRotate('L');
 	}
-	void RotatUp()
-	{
+	void RotatUp(){
 		charactControl.TargetRotate('U');
 	}
-	void RotatDown()
-	{
+	void RotatDown(){
 		charactControl.TargetRotate('D');
 	}
 	#endregion
@@ -618,8 +607,7 @@ public class Programator : MonoBehaviour {
 	#endregion
 	//сравнивает две стринг-переменные. Возвращает истинну если во второй строке начало совпадает с первой строкой
 	bool Ident(string str1, string str2) {
-		if ((str1.Length <= str2.Length) && (str1.Length > 0))
-		{
+		if ((str1.Length <= str2.Length) && (str1.Length > 0)){
 			for (int i = 0; i < str1.Length; ++i) {
 				if (str1[i] != str2[i]) {
 					return false;
@@ -640,13 +628,11 @@ public class Programator : MonoBehaviour {
 	}
 
 	void ProgActiveText() {
-		if (progrActive)
-		{
+		if (progrActive){
 			startStopButtonText.text = "STOP";
 			startStopButtonText.color = new Color(1, 0, 0.05f);
 		}
-		else
-		{
+		else{
 			startStopButtonText.text = "START";
 			startStopButtonText.color = new Color(0, 1, 0.05f);
 		}
@@ -669,8 +655,7 @@ public class Programator : MonoBehaviour {
 		ProgramExecutionInfo[5].text = (verificationMode ? "Вкл" : "Выкл");
 		ProgramExecutionInfo[6].text = (boolRegister ? "Истина" : "Ложь");
 		ProgramExecutionInfo[7].text = (result ? "Истина" : "Ложь"); ;
-		switch (logOp)
-		{
+		switch (logOp){
 			case LogOp.NULL://если еще не было меток блоков
 				ProgramExecutionInfo[8].text = "Отключ";
 				; break;
@@ -722,8 +707,7 @@ public class Programator : MonoBehaviour {
 	void ProgrPanelUpdate() {
 
 		for (int y = 0; y < 12; y++)
-			for (int x = 0; x < 16; x++)
-			{
+			for (int x = 0; x < 16; x++){
 				ProgElementUpdate(x,y);
 			}
 	}
@@ -1048,15 +1032,12 @@ public class Programator : MonoBehaviour {
 		}
 		else if (Input.GetKeyDown(KeyCode.B)){//выбор проверки на строительные блоки 
 			string comand = ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine];
-			for (int i = 0; i < 6; i++)
-			{
-				if (comand == buildingBlocksVerCodes[i])
-				{
+			for (int i = 0; i < 6; i++){
+				if (comand == buildingBlocksVerCodes[i]){
 					ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = buildingBlocksVerCodes[(i + 1) % 6];
 					break;
 				}
-				else if (i == 5)
-				{
+				else if (i == 5){
 					ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = buildingBlocksVerCodes[0];
 				}
 			}
@@ -1102,8 +1083,7 @@ public class Programator : MonoBehaviour {
 			}
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
-		else if (Input.GetKeyDown(KeyCode.R))
-		{
+		else if (Input.GetKeyDown(KeyCode.R)){
 			if (ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] == retCodes[0]){
 				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = retCodes[1];
 			}
@@ -1112,39 +1092,32 @@ public class Programator : MonoBehaviour {
 			}
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
-		else if (Input.GetKeyDown(KeyCode.Backspace))
-		{
+		else if (Input.GetKeyDown(KeyCode.Backspace)){
 			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = nextLineCode;
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
-		else if (Input.GetKeyDown(KeyCode.W))
-		{
+		else if (Input.GetKeyDown(KeyCode.W)){
 			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[0];
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
-		else if (Input.GetKeyDown(KeyCode.S))
-		{
+		else if (Input.GetKeyDown(KeyCode.S)){
 			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[1];
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
-		else if (Input.GetKeyDown(KeyCode.A))
-		{
+		else if (Input.GetKeyDown(KeyCode.A)){
 			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[2];
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
-		else if (Input.GetKeyDown(KeyCode.D))
-		{
+		else if (Input.GetKeyDown(KeyCode.D)){
 			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[3];
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
-		else if (Input.GetKeyDown(KeyCode.Delete))
-		{
+		else if (Input.GetKeyDown(KeyCode.Delete)){
 			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = "";
 			ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine] = new Vec2i(0, 0);
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
-		else if (Input.GetKeyDown(KeyCode.G))
-		{
+		else if (Input.GetKeyDown(KeyCode.G)){
 			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = jmpCode;
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}

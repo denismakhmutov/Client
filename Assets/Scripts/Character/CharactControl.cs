@@ -18,6 +18,7 @@ public class CharactControl : MonoBehaviour {
 	public GameObject repairGUI;//ссылка на GUI леки
     public NetHelper netHelper;
 	public GameObject buttonAutoDig;//ссылка на кнопку автокопы
+	public Programator programator;//ссыль на программатор
 
 	DiggingAnimationController diggingAnimationController;//контроллер анимации копания
 	HealAnimationController healAnimationController;//контроллер анимации лечения
@@ -63,7 +64,7 @@ public class CharactControl : MonoBehaviour {
 		VarInit();
 	}
 
-
+	//инициализация переменных
 	void VarInit()
 	{
 		diggingAnimationController = characterMoveTargetbj.GetComponent<DiggingAnimationController>();
@@ -81,7 +82,44 @@ public class CharactControl : MonoBehaviour {
 		quaternionTarget = new Quaternion(0, 0, 0, 0);
 		Z = characTransform.position.z;
 	}
-	readonly float moveSpeed = 13f;//Скорость реакции бота на таргет
+
+	//сюда лучше пихать все контролы чтобы не было пропусков
+	void Update()
+	{
+		if (Input.GetKeyDown(KeyCode.R))//включение и выключение программатора
+		{
+			programator.progrActive = !programator.progrActive;
+		}
+
+		if (actionsIsAlloved){
+			if (Input.GetKeyUp(KeyCode.E)){//автокопа
+				autoDig = !autoDig;
+				buttonAutoDig.SetActive(!autoDig);
+			}
+			else if (Input.GetKeyUp(KeyCode.V)){//Хилка
+				healAnimationController.AnimActive(characTransform);
+			}
+			else if (Input.GetKey(KeyCode.Z)){//копание на кнопку
+				MessageToServer('D', robotDir);
+			}
+			//else if (Input.GetKeyDown(KeyCode.G))//режим отключения проверки на столкновения (прохождение через блоки)
+			//{
+			//	godMode = !godMode;
+			//}
+		}
+		if (/*Time.frameCount % 4 == 0*/ true)
+		{
+			XX = characTransform.position.x;
+			YY = characTransform.position.y;
+		}
+	}
+
+	private void LateUpdate()
+	{
+		
+	}
+
+	readonly float moveSpeed = 10f;//Скорость реакции бота на таргет
 	void FixedUpdate()
 	{
 		//Все действия имеют кулдаун, поэтому чтобы запретить действия, нужно просто отключить это место
@@ -89,42 +127,18 @@ public class CharactControl : MonoBehaviour {
 		{
 			//сокращение накопленного кулдауна
 			cooldown -= (Time.time - lastActionTime);
-			if (cooldown < 0f) {
+			if (cooldown < 0f)
+			{
 				cooldown = 0f;
 			}
 			lastActionTime = Time.time;
 
 			BuildingLocator();//поиск зданий и активация нужного GUI при совпадении координат
-			if (Input.GetKeyDown(KeyCode.G))//режим отключения проверки на столкновения (прохождение через блоки)
-			{
-				godMode = !godMode;
-			}
-		}
-		if (actionsIsAlloved) {
-			if (Input.GetKeyUp(KeyCode.E))//автокопа
-			{
-				autoDig = !autoDig;
-				buttonAutoDig.SetActive(!autoDig);
-			}
-			else if (Input.GetKeyUp(KeyCode.V))//Хилка
-			{
-				healAnimationController.AnimActive(characTransform);
-			}
-			else if (Input.GetKey(KeyCode.Z))//копание на кнопку
-			{
-				MessageToServer('D', robotDir);
-			}
 		}
 
 		characterMoveTarget.position = moveTarget;
 		characTransform.position = Vector3.Lerp(characTransform.position, moveTarget, Time.deltaTime * moveSpeed);
 		characTransform.rotation = Quaternion.LerpUnclamped(characTransform.rotation, quaternionTarget, 0.3f);
-
-		if (/*Time.frameCount % 4 == 0*/ true)
-		{
-			XX = characTransform.position.x;
-			YY = characTransform.position.y;
-		}
 
 		//проверка на нажатие кнопок движения
 		if ((Time.unscaledTime - lastStepTime) > timeDelay * 50)
@@ -168,43 +182,104 @@ public class CharactControl : MonoBehaviour {
 	}
 
 	//движение таргета
-	public void TargetMove(char direction)
+	public bool TargetMove(char direction)
 	{
 		if (cooldown < 0.002f)
 		{
-			float block = ChankMapVal((int)moveTarget.x, (int)moveTarget.y);
-			if ((block == 4) || (block == 5))
-			{
-				cooldown += movePlusCD;
-			}
-			else
-			{
-				cooldown += moveCD - (block / 200);
-			}
 			switch (direction)
 			{
 				case 'U':
-					moveTarget = new Vector3((int)moveTarget.x + 0.5f, (int)moveTarget.y + 1f + 0.5f, Z);
-					TargetRotate(direction);
-					MessageToServer('m', 'U');
+					int upperDir = ChankMapVal((int)moveTarget.x, (int)moveTarget.y + 1);
+					if (upperDir < 5 || godMode)
+					{
+						moveTarget = new Vector3((int)moveTarget.x + 0.5f, (int)moveTarget.y + 1f + 0.5f, Z);
+						TargetRotate(direction);
+						MessageToServer('m', 'U');
+					}
+					else if (upperDir != 6 && upperDir != 7 && upperDir != 8 && upperDir != 42)
+					{
+						robotDir = 'U';
+						MessageToServer('d', robotDir);
+						TargetRotate('U');
+					}
+					else
+					{
+						TargetRotate('U');
+					}
 					break;
 				case 'D':
-					moveTarget = new Vector3((int)moveTarget.x + 0.5f, (int)moveTarget.y - 1f + 0.5f, Z);
-					TargetRotate(direction);
-					MessageToServer('m', 'D');
+					int lowerDir = ChankMapVal((int)moveTarget.x, (int)moveTarget.y - 1);
+					if (lowerDir < 5 || godMode)
+					{
+						moveTarget = new Vector3((int)moveTarget.x + 0.5f, (int)moveTarget.y - 1f + 0.5f, Z);
+						TargetRotate(direction);
+						MessageToServer('m', 'D');
+					}
+					else if (lowerDir != 6 && lowerDir != 7 && lowerDir != 8 && lowerDir != 42)
+					{
+						robotDir = 'D';
+						MessageToServer('d', robotDir);
+						TargetRotate('D');
+					}
+					else
+					{
+						TargetRotate('D');
+					}
 					break;
 				case 'R':
-					moveTarget = new Vector3((int)moveTarget.x + 1 + 0.5f, (int)moveTarget.y + 0.5f, Z);
-					TargetRotate(direction);
-					MessageToServer('m', 'R');
+					int rightDir = ChankMapVal((int)moveTarget.x + 1, (int)moveTarget.y);
+					if (rightDir < 5 || godMode)
+					{
+						moveTarget = new Vector3((int)moveTarget.x + 1 + 0.5f, (int)moveTarget.y + 0.5f, Z);
+						TargetRotate(direction);
+						MessageToServer('m', 'R');
+					}
+					else if (rightDir != 6 && rightDir != 7 && rightDir != 8 && rightDir != 42)
+					{
+						robotDir = 'R';
+						MessageToServer('d', robotDir);
+						TargetRotate('R');
+					}
+					else
+					{
+						TargetRotate('R');
+					}
 					break;
 				case 'L':
-					moveTarget = new Vector3((int)moveTarget.x - 1 + 0.5f, (int)moveTarget.y + 0.5f, Z);
-					TargetRotate(direction);
-					MessageToServer('m', 'L');
+					int leftDir = ChankMapVal((int)moveTarget.x - 1, (int)moveTarget.y);
+					if (leftDir < 5 || godMode)
+					{
+						moveTarget = new Vector3((int)moveTarget.x - 1 + 0.5f, (int)moveTarget.y + 0.5f, Z);
+						TargetRotate(direction);
+						MessageToServer('m', 'L');
+					}
+					else if (leftDir > 8 && leftDir != 42)
+					{
+						robotDir = 'L';
+						MessageToServer('d', robotDir);
+						TargetRotate('L');
+					}
+					else
+					{
+						TargetRotate('L');
+					}
 					break;
 			}
+
+			float block = ChankMapVal((int)moveTarget.x, (int)moveTarget.y);
+			if (block < 6) {
+				if ((block == 4) || (block == 5))
+				{
+					cooldown += movePlusCD;
+				}
+				else
+				{
+					cooldown += moveCD - (block / 200);
+				}
+			}
+			return true;
 		}
+		return false;
 	}
 	//поворот таргета
 	public void TargetRotate(char direction)
@@ -271,21 +346,8 @@ public class CharactControl : MonoBehaviour {
 
 			if (!Input.GetKey(KeyCode.LeftShift))
 			{
-				if (upperDir < 5 || godMode)
-				{
-					keyPressed = true;
-					TargetMove('U');
-				}
-				else if (upperDir != 6 && upperDir != 7 && upperDir != 8 && upperDir != 42)
-				{
-					robotDir = 'U';
-					MessageToServer('d', robotDir);
-					TargetRotate('U');
-				}
-				else
-				{
-					TargetRotate('U');
-				}
+				TargetMove('U');
+				keyPressed = true;
 			}
 			else if (upperDir > 8 && upperDir != 42)
 			{
@@ -304,21 +366,8 @@ public class CharactControl : MonoBehaviour {
 			int lowerDir = ChankMapVal((int)moveTarget.x, (int)moveTarget.y - 1);
 			if (!Input.GetKey(KeyCode.LeftShift))
 			{
-				if (lowerDir < 5 || godMode)
-				{
-					keyPressed = true;
-					TargetMove('D');
-				}
-				else if (lowerDir != 6 && lowerDir != 7 && lowerDir != 8 && lowerDir != 42)
-				{
-					robotDir = 'D';
-					MessageToServer('d', robotDir);
-					TargetRotate('D');
-				}
-				else
-				{
-					TargetRotate('D');
-				}
+				keyPressed = true;
+				TargetMove('D');
 			}
 			else if (lowerDir > 8 && lowerDir != 42)
 			{
@@ -337,21 +386,8 @@ public class CharactControl : MonoBehaviour {
 			int rightDir = ChankMapVal((int)moveTarget.x + 1, (int)moveTarget.y);
 			if (!Input.GetKey(KeyCode.LeftShift))
 			{
-				if (rightDir < 5 || godMode)
-				{
-					keyPressed = true;
-					TargetMove('R');
-				}
-				else if (rightDir != 6 && rightDir != 7 && rightDir != 8 && rightDir != 42)
-				{
-					robotDir = 'R';
-					MessageToServer('d', robotDir);
-					TargetRotate('R');
-				}
-				else
-				{
-					TargetRotate('R');
-				}
+				keyPressed = true;
+				TargetMove('R');
 			}
 			else if (rightDir > 8 && rightDir != 42)
 			{
@@ -369,21 +405,8 @@ public class CharactControl : MonoBehaviour {
 			int leftDir = ChankMapVal((int)moveTarget.x - 1, (int)moveTarget.y);
 			if (!Input.GetKey(KeyCode.LeftShift))
 			{
-				if (leftDir < 5 || godMode)
-				{
-					keyPressed = true;
-					TargetMove('L');
-				}
-				else if (leftDir > 8 && leftDir != 42)
-				{
-					robotDir = 'L';
-					MessageToServer('d', robotDir);
-					TargetRotate('L');
-				}
-				else
-				{
-					TargetRotate('L');
-				}
+				keyPressed = true;
+				TargetMove('L');
 			}
 			else if (leftDir > 8 && leftDir != 42)
 			{
@@ -430,36 +453,12 @@ public class CharactControl : MonoBehaviour {
 		{
 			if (autoDig)
 			{
-				if (cooldown == 0f)
-				{
-					cooldown += diggCD;
-					if (offline)
-					{
-						ChangeMap(dir, 1);
-					}
-					else
-					{
-						netHelper.ChangeMap('d', dir);
-					}
-					diggingAnimationController.AnimActive(characterMoveTarget.position, robotDir);
-				}
+				DiggAction();
 			}
 		}
 		else if (param == 'D')//Копание при нажатии на кнопку копания
 		{
-			if (cooldown == 0f)
-			{
-				cooldown += diggCD;
-				if (offline)
-				{
-					ChangeMap(dir, 1);
-				}
-				else
-				{
-					netHelper.ChangeMap('d', dir);
-				}
-				diggingAnimationController.AnimActive(characterMoveTarget.position, robotDir);
-			}
+			DiggAction();
 		}
 		else if (param == 'g')
 		{//Геология
@@ -518,6 +517,29 @@ public class CharactControl : MonoBehaviour {
 				netHelper.ChangePos('o', dir);
 			}
 		}
+	}
+
+	/// <summary>
+	/// функция вызова действия "копать"
+	/// Если действие не прошло, то будет возвращен 
+	/// </summary>
+	public bool DiggAction() {
+		if (cooldown == 0f)
+		{
+			cooldown += diggCD;
+			if (offline)
+			{
+				ChangeMap(robotDir, 1);
+			}
+			else
+			{
+				netHelper.ChangeMap('d', robotDir);
+			}
+			diggingAnimationController.AnimActive(characterMoveTarget.position, robotDir);
+
+			return true;
+		}
+		return false;
 	}
 
 	void ChangeMap(char direction, int val) {

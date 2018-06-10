@@ -19261,6 +19261,7 @@ MonoBehaviour:
   repairGUI: {fileID: 1692727859}
   netHelper: {fileID: 628377358}
   buttonAutoDig: {fileID: 1716051267}
+  programator: {fileID: 1852673801}
   offline: 1
   cooldown: 0
   moveCD: 0.06
@@ -37562,7 +37563,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.13450328, y: 0.07550966}
   m_AnchorMax: {x: 0.42849675, y: 0.26849034}
-  m_AnchoredPosition: {x: 272.01, y: 125.799995}
+  m_AnchoredPosition: {x: 272.01, y: 125.8}
   m_SizeDelta: {x: -48.5, y: -29.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1127649174
@@ -62079,6 +62080,7 @@ MonoBehaviour:
   result: 0
   verCoorsV2: {x: 0, y: 0}
   logOp: 0
+  actionIsDone: 1
 --- !u!1 &1858216064
 GameObject:
   m_ObjectHideFlags: 0
