@@ -37,6 +37,7 @@ public class Programator : MonoBehaviour {
 	public Sprite[] blockOrNoSprites = new Sprite[2];//
 	public Sprite[] actionsSprites = new Sprite[7];//
 	public Sprite[] buildingBlocksVerSprites = new Sprite[6];//проверки на строительные блоки
+	public Sprite[] advansedMoveSprites = new Sprite[3];//повороты и движение относительно направления куда смотрит бот
 
 	public int firstLine = 0;//указывает, с какой строки начинать отображение на экране (зависит от скрола)
 
@@ -185,6 +186,7 @@ public class Programator : MonoBehaviour {
 			currStep = 0;
 			stackLvl = 0;
 			verificationMode = false;
+			actionIsDone = true;
 			//logOp = LogOp.NULL;
 		}
 	}
@@ -294,13 +296,53 @@ public class Programator : MonoBehaviour {
 				verificationMode = false;
 				; break;
 			#endregion
+
+			case "f"://Движ вперёд
+				actionIsDone = charactControl.TargetMove(charactControl.robotDir);
+				; break;
+			case "rl"://поворот против часовой
+				switch (charactControl.robotDir) {
+					case 'U':
+						RotatLeft();
+						; break;
+					case 'D':
+						RotatRight();
+						; break;
+					case 'L':
+						RotatDown();
+						; break;
+					case 'R':
+						RotatUp();
+						; break;
+				}
+				verificationMode = false;
+				; break;
+			case "rr"://поворот за часовой
+				switch (charactControl.robotDir)
+				{
+					case 'U':
+						RotatRight();
+						; break;
+					case 'D':
+						RotatLeft();
+						; break;
+					case 'L':
+						RotatUp();
+						; break;
+					case 'R':
+						RotatDown();
+						; break;
+				}
+				verificationMode = false;
+				; break;
+
 			#region 
 			case "dg"://колупать
 				actionIsDone = charactControl.DiggAction();
 				; break;
 			case "mb"://строить основные блоки
-				
-				; break;
+				actionIsDone = charactControl.BuildAction();
+			   ; break;
 			case "ge"://геология
 				
 				; break;
@@ -314,7 +356,7 @@ public class Programator : MonoBehaviour {
 				
 				; break;
 			case "sb"://строить вторичные блоки
-				
+				actionIsDone = charactControl.BuildAction2();
 				; break;
 			#endregion
 			#region указатели логических операций
@@ -339,7 +381,7 @@ public class Programator : MonoBehaviour {
 			case "fun"://вход в подпрограмму по адресу (без переноса значения)
 				Debug.Log("fun");
 				++stackLvl;//поднятие на уровень выше в стеке
-				stack[stackLvl] = new Vec2i(ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].x - 1, ProgramAdressesAndData[stack[stackLvl].x, stack[stackLvl].y].y);
+				stack[stackLvl] = new Vec2i(ProgramAdressesAndData[stack[stackLvl-1].x, stack[stackLvl-1].y].x - 1, ProgramAdressesAndData[stack[stackLvl - 1].x, stack[stackLvl - 1].y].y);
 				verificationMode = false;
 				; break;
 			case "ver"://Проверка
@@ -748,7 +790,17 @@ public class Programator : MonoBehaviour {
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, startEndSprites[0]);
 				; break;
 
-				//Проверки на кристаллы
+			case "f":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, advansedMoveSprites[0]);
+				; break;
+			case "rl":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, advansedMoveSprites[1]);
+				; break;
+			case "rr":
+				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, advansedMoveSprites[2]);
+				; break;
+
+			//Проверки на кристаллы
 			case "gc":
 				programBlocks[x, y].SetProgrElem(ProgrElem.WithoutParam, CristallsSprites[0]);
 				; break;
@@ -941,63 +993,26 @@ public class Programator : MonoBehaviour {
 	string[] buildingBlocksVerCodes = new string[] {//проверки на строительные блоки (fb - опоры, qb - квадро-блоки, roa - дорога)
 		"gb","ob","rb","fb","qb","roa",
 	};
+	string[] actionCodes = new string[] {
+		"mb","sb","ge","ro","hl","al",
+	};
+	string[] advMoveCodes = new string[] {
+		"f","rl","rr",
+	};
 	string nextLineCode = "next";
 	string jmpCode = "jmp";
 
+	string cashCode = "";//нужен для копирования и вставки програмного блока
 
 	//установка программного элемента кнопками
 	void SetProgramElementWthKey() {
 		//ЗАЖАТЫЙ ШИФТ
 		if (Input.GetKey(KeyCode.LeftShift)) {
-			if (Input.GetKeyDown(KeyCode.Z))
-			{
-				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = "dg";
-				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
-			}
-			else if (Input.GetKeyDown(KeyCode.W))
-			{
-				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[0];
-				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
-			}
-			else if (Input.GetKeyDown(KeyCode.S))
-			{
-				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[1];
-				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
-			}
-			else if (Input.GetKeyDown(KeyCode.A))
-			{
-				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[2];
-				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
-			}
-			else if (Input.GetKeyDown(KeyCode.D))
-			{
-				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[3];
-				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
-			}
-			else if (Input.GetKeyDown(KeyCode.C)){//выбор свойств породы
-				string comand = ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine];
-				for (int i = 0; i < 2; i++)
-				{
-					if (comand == rockFituresCodes[0])
-					{
-						ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rockFituresCodes[(i + 1) % 2];
-						break;
-					}
-					else if (i == 1)
-					{
-						ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rockFituresCodes[0];
-					}
-				}
-				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
-			}
-		}
-		//ЗАЖАТЫЙ КОНТРОЛЛ
-		else if (Input.GetKey(KeyCode.LeftControl))
-		{
 			if (Input.GetKeyDown(KeyCode.W))
 			{
 				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = "ver";
-				if (ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine].y < 1) {
+				if (ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine].y < 1)
+				{
 					++ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine].y;
 				}
 				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
@@ -1029,6 +1044,71 @@ public class Programator : MonoBehaviour {
 				}
 				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 			}
+			else if (Input.GetKeyDown(KeyCode.C)){//выбор свойств породы
+				string comand = ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine];
+				for (int i = 0; i < 2; i++)
+				{
+					if (comand == rockFituresCodes[0]){
+						ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rockFituresCodes[(i + 1) % 2];
+						break;
+					}
+					else if (i == 1){
+						ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rockFituresCodes[0];
+					}
+				}
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else if (Input.GetKeyDown(KeyCode.Z))
+			{
+				string comand = ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine];
+				for (int i = 0; i < 6; i++)
+				{
+					if (comand == actionCodes[i])
+					{
+						ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = actionCodes[(i + 1) % 6];
+						break;
+					}
+					else if (i == 5)
+					{
+						ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = actionCodes[0];
+					}
+				}
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+		}
+		//ЗАЖАТЫЙ КОНТРОЛЛ
+		else if (Input.GetKey(KeyCode.LeftControl))
+		{
+			if (Input.GetKeyDown(KeyCode.C))
+			{
+				cashCode = ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine];
+			}
+			else if (Input.GetKey(KeyCode.V))
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = cashCode;
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+		}
+		else if(Input.GetKeyDown(KeyCode.Z))
+		{
+			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = "dg";
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+		}
+		else if (Input.GetKeyDown(KeyCode.X)){// движение по направлению смотра, поворот против и за часовой стрелкой
+			string comand = ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine];
+			for (int i = 0; i < 3; i++)
+			{
+				if (comand == advMoveCodes[i])
+				{
+					ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = advMoveCodes[(i + 1) % 3];
+					break;
+				}
+				else if (i == 2)
+				{
+					ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = advMoveCodes[0];
+				}
+			}
+			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
 		else if (Input.GetKeyDown(KeyCode.B)){//выбор проверки на строительные блоки 
 			string comand = ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine];
@@ -1083,7 +1163,7 @@ public class Programator : MonoBehaviour {
 			}
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
-		else if (Input.GetKeyDown(KeyCode.R)){
+		else if (Input.GetKeyDown(KeyCode.E)){//возвраты
 			if (ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] == retCodes[0]){
 				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = retCodes[1];
 			}
@@ -1097,22 +1177,53 @@ public class Programator : MonoBehaviour {
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
 		}
 		else if (Input.GetKeyDown(KeyCode.W)){
-			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[0];
-			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			if (ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] != "U")
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[0];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else {
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[0];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
 		}
 		else if (Input.GetKeyDown(KeyCode.S)){
-			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[1];
-			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			if (ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] != "D")
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[1];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[1];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
 		}
 		else if (Input.GetKeyDown(KeyCode.A)){
-			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[2];
-			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			if (ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] != "L")
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[2];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[2];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
 		}
 		else if (Input.GetKeyDown(KeyCode.D)){
-			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[3];
-			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			if (ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] != "R")
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = moveCodes[3];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
+			else
+			{
+				ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = rotatCodes[3];
+				ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);
+			}
 		}
-		else if (Input.GetKeyDown(KeyCode.Delete)){
+		else if (Input.GetKey(KeyCode.Delete)){
 			ProgramComands[coorSelectCell.x, coorSelectCell.y + firstLine] = "";
 			ProgramAdressesAndData[coorSelectCell.x, coorSelectCell.y + firstLine] = new Vec2i(0, 0);
 			ProgElementUpdate(coorSelectCell.x, coorSelectCell.y);

@@ -43,7 +43,7 @@ public class CharactControl : MonoBehaviour {
 
 	bool autoDig = true;//Автокопа
 
-	char robotDir = 'U';
+	public char robotDir = 'U';
 
 	//координаты, к которым двигается камера игрока
 	float XX;
@@ -57,6 +57,7 @@ public class CharactControl : MonoBehaviour {
 	public float movePlusCD = 0.03f;
 	public float diggCD = 0.4f;
 	public float healCD = 0.5f;
+	public float buildCD = 0.36f;
 	float lastActionTime = 0;
 
 	// Use this for initialization
@@ -101,6 +102,15 @@ public class CharactControl : MonoBehaviour {
 			}
 			else if (Input.GetKey(KeyCode.Z)){//копание на кнопку
 				MessageToServer('D', robotDir);
+			}
+			else if (Input.GetKey(KeyCode.Q)){//геология
+				MessageToServer('g', robotDir);
+			}
+			else if (Input.GetKey(KeyCode.F)){//Блоки основные
+				MessageToServer('B', robotDir);
+			}
+			else if (Input.GetKey(KeyCode.H)){//Блоки вторичные
+				MessageToServer('b', robotDir);
 			}
 			//else if (Input.GetKeyDown(KeyCode.G))//режим отключения проверки на столкновения (прохождение через блоки)
 			//{
@@ -420,14 +430,6 @@ public class CharactControl : MonoBehaviour {
 			}
 			characterMoveTarget.position = moveTarget;
 		}
-		else if (Input.GetKey(KeyCode.Q))
-		{
-			MessageToServer('g', robotDir);
-		}
-		else if (Input.GetKey(KeyCode.F))
-		{
-			MessageToServer('b', robotDir);
-		}
 
 		return keyPressed;
 	}
@@ -472,16 +474,14 @@ public class CharactControl : MonoBehaviour {
 			}
 			//Добавить анимацию геологии
 		}
-		else if (param == 'b')//Стройка
+		else if (param == 'B')//Стройка основных блоков
 		{
-			if (offline)
-			{
-				ChangeMap(dir, 36);
-			}
-			else
-			{
-				netHelper.ChangeMap(param, dir);
-			}
+			BuildAction();
+			//Добавить анимацию геологии
+		}
+		else if (param == 'b')//Стройка вторичных блоков
+		{
+			BuildAction2();
 			//Добавить анимацию геологии
 		}
 		else if (param == 'm')//Передвижение
@@ -521,7 +521,7 @@ public class CharactControl : MonoBehaviour {
 
 	/// <summary>
 	/// функция вызова действия "копать"
-	/// Если действие не прошло, то будет возвращен 
+	/// Если действие не прошло, то будет возвращен false
 	/// </summary>
 	public bool DiggAction() {
 		if (cooldown == 0f)
@@ -542,6 +542,71 @@ public class CharactControl : MonoBehaviour {
 		return false;
 	}
 
+	/// <summary>
+	/// функция вызова действия "строить основные блоки"
+	/// Если действие не прошло, то будет возвращен false
+	/// </summary>
+	public bool BuildAction()
+	{
+		if (cooldown == 0) {
+			if (offline)
+			{
+				if (BlockOnDirection(robotDir) < 6)
+				{
+					ChangeMap(robotDir, 36);
+					cooldown += buildCD;
+					return true;
+				}
+				else if ((BlockOnDirection(robotDir) > 35) && (BlockOnDirection(robotDir) < 38))
+				{
+					ChangeMap(robotDir, BlockOnDirection(robotDir) + 1);
+					cooldown += buildCD;
+					return true;
+				}
+				return true;
+			}
+			else
+			{
+				netHelper.ChangeMap('B', robotDir);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/// <summary>
+	/// функция вызова действия "строить вторичные блоки"
+	/// Если действие не прошло, то будет возвращен false
+	/// </summary>
+	public bool BuildAction2()
+	{
+		if (cooldown == 0)
+		{
+			if (offline)
+			{
+				if (BlockOnDirection(robotDir) < 6)
+				{
+					ChangeMap(robotDir, 39);
+					cooldown += buildCD;
+					return true;
+				}
+				else if (BlockOnDirection(robotDir) == 39)
+				{
+					ChangeMap(robotDir, 40);
+					cooldown += buildCD;
+					return true;
+				}
+				return true;
+			}
+			else
+			{
+				netHelper.ChangeMap('B', robotDir);
+				return true;
+			}
+		}
+		return false;
+	}
+
 	void ChangeMap(char direction, int val) {
 		int x = (int)characterMoveTarget.position.x;
 		int y = (int)characterMoveTarget.position.y;
@@ -555,6 +620,22 @@ public class CharactControl : MonoBehaviour {
 			case 'L': x-- ; break;
 		}
 		chankLoadScript.chankMap[x / 32, y / 32][x % 32, y % 32] = (byte)val;
+	}
+
+	int BlockOnDirection(char direction)
+	{
+		int x = (int)characterMoveTarget.position.x;
+		int y = (int)characterMoveTarget.position.y;
+
+		switch (direction)
+		{
+			case 'O':; break;
+			case 'U': y++; break;
+			case 'D': y--; break;
+			case 'R': x++; break;
+			case 'L': x--; break;
+		}
+		return chankLoadScript.chankMap[x / 32, y / 32][x % 32, y % 32];
 	}
 	#endregion
 

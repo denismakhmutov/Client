@@ -23,7 +23,7 @@ public class AllProgramBlocksController : MonoBehaviour {
 		{
 			if (element == (ProgrElem)i) {
 				programElements[i].SetActive(true);
-				programElements[i].GetComponent<Image>().sprite = sprite;
+				gameObject.GetComponent<Image>().sprite = sprite;
 				if (element > 0) {
 					inputFields[i - 1].text = Vec2iToSTR(programmatorref.ProgramAdressesAndData[x,y + programmatorref.firstLine]);
 				}
