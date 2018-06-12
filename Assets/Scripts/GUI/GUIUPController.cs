@@ -34,7 +34,6 @@ public class GUIUPController : MonoBehaviour {
 	[Space]
 	public Text[] textUPSkill = new Text[20];//уровень скилла
 
-
 	public bool offline;
 	/// <summary>
 	///Масcив имеющихся у игрока скиллов
@@ -43,7 +42,29 @@ public class GUIUPController : MonoBehaviour {
 	///2-сила скилла				3-текущий набранный опыт,
 	///4-Опыт для нового уровня		5-цена следующего	уровня,
 	/// </summary>
-	public int[,] skillsInfoValues = new int[20,6];
+	public int[,] skillsInfoValues = new int[20,6]{
+	{ 0, 1, 10, 10, 1000, 1000 },//передвиж
+	{ 1, 1, 10, 20, 1000, 2000 },//передвиж по дорогам
+	{ 3, 1, 10, 20, 1000, 5000 },//улучшенное охлаждение
+	{ 4, 1, 10, 60, 1000, 5000 },//Ремонт
+	{ 6, 1, 10, 660, 1000, 5000 },//Защита
+	{ 7, 1, 10, 50, 1000, 1000 },//Защита от слизи
+	{ 9, 1, 10, 30, 1000, 2000 },//Копание
+	{ 13, 1, 10,60, 1000, 5000 },//Кристаллография
+	{ 18, 1, 10, 220, 1000, 5000 },//Добыча
+	{ 19, 1, 10, 50, 1000, 5000 },//Извлечение
+	{ 20, 1, 10, 1000, 1000, 1000 },//Смежное извлечение
+	{ 23, 1, 10, 1000, 1000, 5000 },//Сортировка
+	{ 24, 1, 10, 1000, 1000, 5000 },//Дополнительные зеленые
+	{ 28, 1, 10, 1000, 2000, 2000 },//Дополнительные фиолетовые
+	{ 33, 1, 10, 0, 1000, 5000 },//Нано-упаковка
+	{ 34, 1, 10, 0, 1000, 5000 },//Вместимость зелёных
+	{ 38, 1, 10, 0, 1000, 2000 },//Вместимость фиолетовых
+	{ 40, 1, 10, 0, 1000, 5000 },//Стройка опор
+	{ 43, 1, 10, 0, 1000, 2000 },//Стройка зелёных блоков
+	{ 46, 1, 10, 1000, 1000, 5000 }//Стройка дороги
+	};
+
 
 	/// <summary>
 	///по иксу выбор скилла по иду, по игреку выбор : 0-Название,1-Описание,2-эффект,3-единица измерения.
@@ -122,24 +143,24 @@ public class GUIUPController : MonoBehaviour {
 		canvasCurrentUpObj.SetActive(false);
 		if (offline) {
 			#region дебаговая херь для стат бота
-			for (int i = 0; i < 20; i++)//Симуляция получения данных с сервера
-			{
-				skillsInfoValues[i, 0] = Random.Range(-3, 46 + 1);//айди скилла
-				skillsInfoValues[i, 1] = Random.Range(1, 522);//Уровень скилла
+			//for (int i = 0; i < 20; i++)//Симуляция получения данных с сервера
+			//{
+			//	skillsInfoValues[i, 0] = Random.Range(-3, 46 + 1);//айди скилла
+			//	skillsInfoValues[i, 1] = Random.Range(1, 522);//Уровень скилла
 
-				skillsInfoValues[i, 2] = Random.Range(1, 100);//Эффект скилла
+			//	skillsInfoValues[i, 2] = Random.Range(1, 100);//Эффект скилла
 
-				skillsInfoValues[i, 3] = Random.Range(0, 1000000);//Текущий набранный опыт
-				if (i % 2 == 0)
-				{
-					skillsInfoValues[i, 4] = Random.Range(skillsInfoValues[i, 3], skillsInfoValues[i, 3] * 5);//Опыт для нового уровня
-				}
-				else
-				{
-					skillsInfoValues[i, 4] = skillsInfoValues[i, 3];//Опыт для нового уровня
-				}
-				skillsInfoValues[i, 5] = Random.Range(10000, 1000000000);//цена следующего уровня
-			}
+			//	skillsInfoValues[i, 3] = Random.Range(0, 1000000);//Текущий набранный опыт
+			//	if (i % 2 == 0)
+			//	{
+			//		skillsInfoValues[i, 4] = Random.Range(skillsInfoValues[i, 3], skillsInfoValues[i, 3] * 5);//Опыт для нового уровня
+			//	}
+			//	else
+			//	{
+			//		skillsInfoValues[i, 4] = skillsInfoValues[i, 3];//Опыт для нового уровня
+			//	}
+			//	skillsInfoValues[i, 5] = Random.Range(10000, 1000000000);//цена следующего уровня
+			//}
 			#endregion
 		}
 	}

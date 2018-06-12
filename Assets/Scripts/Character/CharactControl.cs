@@ -341,6 +341,11 @@ public class CharactControl : MonoBehaviour {
 	{
 		moveTarget = new Vector3(Pos.x + 0.5f, Pos.y + 0.5f, -5f);
 	}
+	public void ReturnToRespawn()
+	{
+		Vector3 Pos = new Vector3(308, 313, 0);
+		moveTarget = new Vector3(Pos.x + 0.5f, Pos.y + 0.5f, -5f);
+	}
 
 	//управление перемещением персонажа клавиатурой(перемещение таргета в новое положение, если можно)
 	bool CharactControlWhithKeyboard()
