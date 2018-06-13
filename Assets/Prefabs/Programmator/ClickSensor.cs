@@ -2,7 +2,8 @@
 
 public class ClickSensor : MonoBehaviour {
 	public AllProgramBlocksController blocksController;
-	void OnMouseDown()
+
+	private void OnMouseUp()
 	{
 		blocksController.keyReadBlock();
 	}

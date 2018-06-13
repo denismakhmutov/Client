@@ -25,7 +25,7 @@ public class CharacterSettings : MonoBehaviour {
 		fullScreen = false;
 		music = false;
 		sound = false;
-}
+	}
 	
 	// Update is called once per frame
 	void Update () {
