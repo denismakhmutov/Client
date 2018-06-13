@@ -44,8 +44,8 @@ public class CharacterDataScript : MonoBehaviour {
 
 
 
-		moneyValue = 550000000;
-		creditsValue = 250000;
+		moneyValue = 3500;
+		creditsValue = 2;
 
 		CurrentNickname.text = "<color=#00ffffff> RoboMiner_01 </color>" ;
 	}

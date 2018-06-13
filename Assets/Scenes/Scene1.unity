@@ -37465,7 +37465,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.13450328, y: 0.07550966}
   m_AnchorMax: {x: 0.42849675, y: 0.26849034}
-  m_AnchoredPosition: {x: 272.01, y: 125.799995}
+  m_AnchoredPosition: {x: 272.01, y: 125.8}
   m_SizeDelta: {x: -48.5, y: -29.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1127649174
@@ -40932,11 +40932,22 @@ MonoBehaviour:
     m_HighlightedTrigger: Highlighted
     m_PressedTrigger: Pressed
     m_DisabledTrigger: Disabled
-  m_Interactable: 0
+  m_Interactable: 1
   m_TargetGraphic: {fileID: 1214413157}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1852673801}
+        m_MethodName: DebudMode
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1214413157
@@ -44705,7 +44716,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.20355755, y: 0.48464134}
   m_AnchorMax: {x: 0.7933154, y: 0.5243587}
-  m_AnchoredPosition: {x: -0.19996262, y: 4.4}
+  m_AnchoredPosition: {x: -0.19996262, y: 4.4000006}
   m_SizeDelta: {x: -1, y: -10.3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1341529948
@@ -46626,7 +46637,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Debug
+  m_Text: Debug ON
 --- !u!222 &1406254250
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -61930,6 +61941,7 @@ MonoBehaviour:
   - {fileID: 1718575762}
   startStopButtonText: {fileID: 1994527787}
   debugButton: {fileID: 1214413156}
+  debugButtonText: {fileID: 1406254249}
   SliderBackground: {fileID: 907197465}
   scrollbar: {fileID: 2117070668}
   LinePrefab: {fileID: 1845404525083408, guid: 5e385a592492af34e9535e04efbdf844, type: 2}
@@ -62007,7 +62019,7 @@ MonoBehaviour:
   firstLine: 0
   keyboardRead: 1
   progrActive: 0
-  tactsPerFrame: 2
+  tactsPerFrame: 1
   TactsForCD: 0
   currStep: 0
   stackVolume: 1024
@@ -62018,6 +62030,7 @@ MonoBehaviour:
   verCoorsV2: {x: 0, y: 0}
   logOp: 0
   actionIsDone: 1
+  debugMode: 0
 --- !u!1 &1858216064
 GameObject:
   m_ObjectHideFlags: 0

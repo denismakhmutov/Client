@@ -34,6 +34,16 @@ public class AllProgramBlocksController : MonoBehaviour {
 		}
 	}
 
+	public void SetDebugMarker(bool marker)
+	{
+		if (marker) {
+			gameObject.GetComponent<Image>().color = new Color(1, 0, 0);
+		}
+		else {
+			gameObject.GetComponent<Image>().color = new Color(1, 1, 1);
+		}
+	}
+
 	string Vec2iToSTR(Vec2i vec) {
 		string sx;
 		string sy;

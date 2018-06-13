@@ -13,6 +13,7 @@ public class Programator : MonoBehaviour {
 
 	public Text startStopButtonText;//текст кнопки включения и выключения программы
 	public Button debugButton;//кнопка дебага(для отключения или включения в зависимости от чего-то)
+	public Text debugButtonText;
 	public Slider SliderBackground;//прозрачность задника программатора
 	public Scrollbar scrollbar;//скролл для проги
 
@@ -90,6 +91,7 @@ public class Programator : MonoBehaviour {
 	//не возникало проскоков из-за отката в чарактер контроллере. Программный такт не переключится на новую ячейку пока не получит ответ
 	//позволяющий продолжить работу
 	public bool actionIsDone = true;
+	public bool debugMode = false;
 
 	// Use this for initialization
 	void Start() {
@@ -217,12 +219,19 @@ public class Programator : MonoBehaviour {
 		}
 
 		if (stack[stackLvl].x == (pageX - 1)){//если конец строки
-			stack[stackLvl].x = startCoor.x;
-			stack[stackLvl].y = startCoor.y;
-			Debug.Log("stack[stackLvl] = startCoor;" + startCoor.x + " " + startCoor.y);
+			if (actionIsDone) {
+				stack[stackLvl].x = startCoor.x;
+				stack[stackLvl].y = startCoor.y;
+				Debug.Log("stack[stackLvl] = startCoor;" + startCoor.x + " " + startCoor.y);
+			}
 		}
 		else if(actionIsDone){
 			++stack[stackLvl].x;
+		}
+
+		if (debugMode)
+		{
+			SetCurrentComandMarker(stack[stackLvl]);//выделение текущей команды
 		}
 
 		Debug.Log("Выполнение команды ячейки:" + stack[stackLvl].x + " " + stack[stackLvl].y);
@@ -236,7 +245,7 @@ public class Programator : MonoBehaviour {
 				startCoor.y = stack[stackLvl].y;
 				; break;
 			case "next"://следующая строка
-				stack[stackLvl].x = 0;
+				stack[stackLvl].x = -1;
 				++stack[stackLvl].y;
 				Debug.Log("End");
 				; break;
@@ -336,7 +345,7 @@ public class Programator : MonoBehaviour {
 				verificationMode = false;
 				; break;
 
-			#region 
+			#region различные действия от бота
 			case "dg"://колупать
 				actionIsDone = charactControl.DiggAction();
 				; break;
@@ -358,7 +367,7 @@ public class Programator : MonoBehaviour {
 			case "sb"://строить вторичные блоки
 				actionIsDone = charactControl.BuildAction2();
 				; break;
-			#endregion
+			#endregion 
 			#region указатели логических операций
 			case "or":
 				logOp = LogOp.OR;
@@ -752,6 +761,31 @@ public class Programator : MonoBehaviour {
 			for (int x = 0; x < 16; x++){
 				ProgElementUpdate(x,y);
 			}
+	}
+
+	//выделение красным блока, который выполняется в данный момент времени
+	Vec2i secondCoors = new Vec2i(0,0);//координаты прошлого места метки (координаты именно на поле, а не в массиве)
+	void SetCurrentComandMarker(Vec2i currentCoors) {
+		programBlocks[secondCoors.x, secondCoors.y].SetDebugMarker(false);
+
+		if ((currentCoors.y >= firstLine) && (currentCoors.y < (firstLine + 12))) {
+			programBlocks[currentCoors.x, currentCoors.y - firstLine].SetDebugMarker(true);
+			secondCoors.x = currentCoors.x;
+			secondCoors.y = currentCoors.y - firstLine;
+		}
+	}
+
+	//включение и выключение дебаг-мода
+	public void DebudMode() {
+		debugMode = !debugMode;
+		if (!debugMode)
+		{
+			debugButtonText.text = "Debug ON";
+			programBlocks[secondCoors.x, secondCoors.y].SetDebugMarker(false);
+		}
+		else {
+			debugButtonText.text = "Debug OFF";
+		}
 	}
 
 	//Обновление одного блока программатора
@@ -1319,6 +1353,14 @@ public class Vec2i
 	public Vector2 Vector2Set()
 	{
 		return new Vector2(this.x, this.y);
+	}
+
+	/// <summary>
+	/// установка в векторе значений другого вектора
+	/// </summary>
+	public void SetValues2i(Vec2i vec2I) {
+		this.x = vec2I.x;
+		this.y = vec2I.y;
 	}
 }
 

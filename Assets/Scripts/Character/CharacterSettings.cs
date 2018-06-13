@@ -19,12 +19,12 @@ public class CharacterSettings : MonoBehaviour {
 	void Start () {
 		gunRadius = false;
 		autoRepair = false;
-		localChat = true;
-		alarms = true;
-		teleportationOnBuriedTelePad = true;
+		localChat = false;
+		alarms = false;
+		teleportationOnBuriedTelePad = false;
 		fullScreen = false;
-		music = true;
-		sound = true;
+		music = false;
+		sound = false;
 }
 	
 	// Update is called once per frame
