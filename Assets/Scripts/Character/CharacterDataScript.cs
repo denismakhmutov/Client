@@ -38,7 +38,7 @@ public class CharacterDataScript : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		characterMaxHP = Random.Range(100,1950);
+		characterMaxHP = Random.Range(15,100);
 		characterCurrentHP = Random.Range(25, characterMaxHP + 1);
 		charactCrystalls = new uint[6];
 

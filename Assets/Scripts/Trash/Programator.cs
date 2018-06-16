@@ -176,7 +176,11 @@ public class Programator : MonoBehaviour {
 		if (progrActive){
 			for (int n = 0; n < tactsPerFrame; n++) {
 				if (TactsForCD == 0){
+					if (charactControl.cooldown == 0) {
+
+					}
 					ProgramTactUpdate();//выполнение следубщего шага программы
+
 				}
 				else{
 					--TactsForCD;
